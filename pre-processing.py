@@ -6,4 +6,4 @@
 
 # %%
 import pandas
-import matplotlib.pyplot
+import matplotlib.pyplot as pyplot
