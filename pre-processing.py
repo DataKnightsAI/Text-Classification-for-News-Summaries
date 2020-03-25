@@ -8,7 +8,7 @@
 import pandas
 from matplotlib import pyplot
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.feature_selection import chi2
+import sklearn.feature_selection
 import numpy
 
 # %% [markdown]
@@ -53,10 +53,14 @@ train_data_sample = train_data.sample(n = 1000, replace = False, random_state = 
 print(train_data_sample)
 
 # %%
-tfidf = TfidfVectorizer(sublinear_tf = True, min_df = 1, norm = 'l2', lowercase = True, 
-                        strip_accents = 'ascii', ngram_range = (1, 2), stop_words = 'english')
-features = tfidf.fit_transform(train_data_sample).toarray()
-labels = train_data_sample.category
+# TF/IDF
+tfidf = TfidfVectorizer(sublinear_tf = True, min_df = 0, norm = 'l2', lowercase = True, 
+                        strip_accents = 'ascii', ngram_range = (1, 2), 
+                        stop_words = 'english', use_idf = True)
+# tfidf = TfidfVectorizer(min_df=0, use_idf=True, lowercase=True, stop_words='english')
+features = tfidf.fit_transform(train_data_sample.headline).toarray()
+vocab = tfidf.get_feature_names()
+pandas.DataFrame(numpy.round(features, 2), columns = vocab)
 features.shape
 
 
