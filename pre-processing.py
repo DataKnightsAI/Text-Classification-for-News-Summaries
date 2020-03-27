@@ -6,8 +6,9 @@
 
 # %%
 import pandas
-from matplotlib import pyplot
+from matplotlib import pyplot as plt
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
 import numpy
 from sklearn.feature_selection import chi2
 
@@ -31,7 +32,7 @@ train_data.head()
 # %%
 #fig = pyplot.figure()
 train_data.groupby('category').headline.count().plot.bar(ylim = 0)
-pyplot.show()
+plt.show()
 
 # %%
 """ def normalize_document(doc):
@@ -65,6 +66,18 @@ features.shape
 
 
 # %%
-print(features)
+print(pandas.DataFrame(train_data_sample.groupby(['category']).count()))
+
+# %%
+cv = CountVectorizer(min_df = 2, lowercase = True, 
+                        strip_accents = 'ascii', ngram_range = (1, 1), 
+                        stop_words = 'english')
+cv_matrix = cv.fit_transform(train_data_sample.headline)
+cv_matrix = cv_matrix.toarray()
+cv_matrix
+# get all unique words in the corpus
+vocab = cv.get_feature_names()
+# show document feature vectors
+cv_matrix_named = pandas.DataFrame(cv_matrix, columns=vocab)
 
 # %%
