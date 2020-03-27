@@ -69,7 +69,7 @@ features.shape
 print(pandas.DataFrame(train_data_sample.groupby(['category']).count()))
 
 # %%
-cv = CountVectorizer(min_df = 2, lowercase = True, 
+cv = CountVectorizer(min_df = 2, lowercase = True, token_pattern=r'(?u)\b[A-Za-z]+\b', 
                         strip_accents = 'ascii', ngram_range = (1, 1), 
                         stop_words = 'english')
 cv_matrix = cv.fit_transform(train_data_sample.headline)
