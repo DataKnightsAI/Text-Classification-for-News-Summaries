@@ -8,8 +8,8 @@
 import pandas
 from matplotlib import pyplot
 from sklearn.feature_extraction.text import TfidfVectorizer
-import sklearn.feature_selection
 import numpy
+from sklearn.feature_selection import chi2
 
 # %% [markdown]
 ### Read in the data
