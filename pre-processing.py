@@ -11,6 +11,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import CountVectorizer
 import numpy
 from sklearn.feature_selection import chi2
+from PIL import Image
+from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
 
 """====================================================================="""
 # %% [markdown]
@@ -34,10 +36,10 @@ train_data.head()
 
 # %%
 train_data_sample = train_data.sample(n = 1000, replace = False, random_state = 123)
-print(train_data_sample.head())
+train_data_sample.head()
 
 # %%
-cv = CountVectorizer(min_df = 2, lowercase = True, token_pattern=r'(?u)\b[A-Za-z]+\b', 
+cv = CountVectorizer(min_df = 2, lowercase = True, token_pattern=r'(?u)\b[A-Za-z]{2,}\b', 
                         strip_accents = 'ascii', ngram_range = (1, 1), 
                         stop_words = 'english')
 cv_matrix = cv.fit_transform(train_data_sample.headline).toarray()
@@ -53,11 +55,49 @@ cv_matrix_df = pandas.DataFrame(cv_matrix, columns=vocab)
 ### Data Exploration
 
 # %%
+# bar plot of the count of unique things in each category
 train_data.groupby('category').headline.count().plot.bar(ylim = 0)
 plt.show()
 
 # %%
+# print out the number of unique things in each category
 print(pandas.DataFrame(train_data_sample.groupby(['category']).count()))
+
+# %%
+print("There are {} observations and {} features in this dataset. \n".\
+    format(cv_matrix_df.shape[0],cv_matrix_df.shape[1]))
+
+# %%
+# print a description of the categories
+categories = train_data_sample.groupby("category")
+categories.describe().head()
+
+# %%
+word_count = []
+for word in vocab:
+    word_count.append(sum(cv_matrix_df.loc[:, word]))
+
+word_aggregate_df = pandas.DataFrame({'word': vocab, 'count': word_count})
+print(word_aggregate_df)
+
+# %%
+# Generate a wordcloud using wordcloud package
+
+# Start with one review:
+text = train_data_sample.headline[30870]
+
+# Create and generate a word cloud image:
+wordcloud = WordCloud().generate(text)
+
+# Display the generated image:
+plt.imshow(wordcloud, interpolation='bilinear')
+plt.axis("off")
+plt.show()
+
+# %%
+# table of the top 10 words
+#vocab_df = pandas.DataFrame(vocab)
+#vocab_df.groupby()
 
 """====================================================================="""
 # %% [markdown]
