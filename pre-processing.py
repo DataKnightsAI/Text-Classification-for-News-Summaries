@@ -73,23 +73,19 @@ categories = train_data_sample.groupby("category")
 categories.describe().head()
 
 # %%
-word_count = []
+# prepare the dictionary to be used in
+# word_count = []
+text = {}
 for word in vocab:
-    word_count.append(sum(cv_matrix_df.loc[:, word]))
-
-word_aggregate_df = pandas.DataFrame({'word': vocab, 'count': word_count})
-print(word_aggregate_df)
+    # word_count.append(sum(cv_matrix_df.loc[:, word]))
+    text[word] = int(sum(cv_matrix_df.loc[:, word]))
 
 # %%
-# Generate a wordcloud using wordcloud package
+# generate a word cloud image with top 50 words and 80% horizontal:
+wordcloud = WordCloud(max_words=50, prefer_horizontal=0.8).\
+            generate_from_frequencies(text)
 
-# Start with one review:
-text = train_data_sample.headline[30870]
-
-# Create and generate a word cloud image:
-wordcloud = WordCloud().generate(text)
-
-# Display the generated image:
+# display the generated image:
 plt.imshow(wordcloud, interpolation='bilinear')
 plt.axis("off")
 plt.show()
