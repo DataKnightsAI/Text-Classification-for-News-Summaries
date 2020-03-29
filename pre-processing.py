@@ -39,6 +39,17 @@ train_data_sample = train_data.sample(n = 1000, replace = False, random_state = 
 train_data_sample.head()
 
 # %%
+# Clean HTML code & news sources
+import re
+
+def clean(x):
+    x = re.sub(r'(&[A-Za-z]+)|\(.*\)', '', x)
+    return str(x)
+
+for i, row in train_data_sample.iterrows():
+    train_data_sample.at[i, "headline"] = clean(row.headline)
+
+# %%
 cv = CountVectorizer(min_df = 2, lowercase = True, token_pattern=r'(?u)\b[A-Za-z]{2,}\b', 
                         strip_accents = 'ascii', ngram_range = (1, 1), 
                         stop_words = 'english')
@@ -73,7 +84,7 @@ categories = train_data_sample.groupby("category")
 categories.describe().head()
 
 # %%
-# prepare the dictionary to be used in
+# prepare the dictionary to be used in wordcloud
 # word_count = []
 text = {}
 for word in vocab:
@@ -99,12 +110,11 @@ plt.show()
 # %% [markdown]
 ### TF/IDF
 
-# %%
-tfidf = TfidfVectorizer(sublinear_tf = True, min_df = 0, norm = 'l2', lowercase = True, 
-                        strip_accents = 'ascii', ngram_range = (1, 2), 
-                        stop_words = 'english', use_idf = True)
-# tfidf = TfidfVectorizer(min_df=0, use_idf=True, lowercase=True, stop_words='english')
-features = tfidf.fit_transform(train_data_sample.headline).toarray()
-vocab = tfidf.get_feature_names()
-pandas.DataFrame(numpy.round(features, 2), columns = vocab)
-features.shape()
+# # %%
+# tfidf = TfidfVectorizer(sublinear_tf = True, min_df = 0, norm = 'l2', lowercase = True, 
+#                         strip_accents = 'ascii', ngram_range = (1, 2), 
+#                         stop_words = 'english', use_idf = True, token_pattern=r'(?u)\b[A-Za-z]{2,}\b')
+# # tfidf = TfidfVectorizer(min_df=0, use_idf=True, lowercase=True, stop_words='english')
+# features = tfidf.fit_transform(train_data_sample.headline).toarray()
+# pandas.DataFrame(numpy.round(features, 2), columns = vocab)
+# features.shape()
