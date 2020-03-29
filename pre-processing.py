@@ -39,7 +39,7 @@ train_data_sample = train_data.sample(n = 1000, replace = False, random_state = 
 train_data_sample.head()
 
 # %%
-# Clean HTML code & news sources
+# Clean HTML code & news sources from headline
 import re
 
 def clean(x):
@@ -48,6 +48,20 @@ def clean(x):
 
 for i, row in train_data_sample.iterrows():
     train_data_sample.at[i, "headline"] = clean(row.headline)
+
+# %%
+# clean news sources from content
+sources_data = pandas.read_csv("./data/news_sources.csv")
+
+def remove_sources(x):
+    x = str(x)
+    for source in sources_data.iterrows():
+        if source.list in x:
+            x = x.replace(source, f' {source} ')
+    return x
+
+for i, row in train_data_sample.iterrows():
+    train_data_sample.at[i, "content_cleaned"] = remove_sources(row.content)
 
 # %%
 cv = CountVectorizer(min_df = 2, lowercase = True, token_pattern=r'(?u)\b[A-Za-z]{2,}\b', 
