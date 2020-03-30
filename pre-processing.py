@@ -2,7 +2,7 @@
 # To add a new markdown cell, type '# %% [markdown]'
 
 # %% [markdown]
-### Import necessary dependencies
+# ## Import necessary dependencies
 
 # %%
 import pandas
@@ -16,7 +16,7 @@ from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
 
 """====================================================================="""
 # %% [markdown]
-### Read in the data
+# ## Read in the data
 
 # %%
 train_data = pandas.read_csv("./data/train.csv")
@@ -24,7 +24,7 @@ train_data.head()
 
 """====================================================================="""
 # %% [markdown]
-### Data Cleaning
+# ## Data Cleaning
 
 # %%
 train_data.columns = ['category', 'headline', 'content']
@@ -32,7 +32,7 @@ train_data.head()
 
 """====================================================================="""
 # %% [markdown]
-#### Sample 1000 rows
+# ### Sample 1000 rows
 
 # %%
 train_data_sample = train_data.sample(n = 1000, replace = False, random_state = 123)
@@ -51,19 +51,34 @@ for i, row in train_data_sample.iterrows():
 
 # %%
 # clean news sources from content
-sources_data = pandas.read_csv("./data/news_sources.csv")
+sources_data = pandas.read_csv("./data/news_sources_clean_v1.csv")
 
 def remove_sources(x):
     x = str(x)
-    for source in sources_data.iterrows():
-        if source.list in x:
-            x = x.replace(source, f' {source} ')
+    # print('X OUTSIDE OF LOOP:' + x)
+    for i, source in sources_data.iterrows():
+        source_list_string = str(sources_data.at[i, 'list'])
+        #print('source_list_string:' + source_list_string)
+        source_list_stripped = source_list_string.strip()
+        #print('source_list_stripped:' + source_list_stripped)
+        
+        if source_list_stripped in x:
+            # print('x at this point:' + x)
+            # print('source_list_stripped:' + source_list_stripped)
+            # print('row number: ' + str(i))
+            
+            #this doesn't work
+            x = x.replace(source_list_stripped, '')
+            #regex_expression = re.compile(source.list)
+            #x = re.sub(regex_expression, '', x)
     return x
 
 for i, row in train_data_sample.iterrows():
     train_data_sample.at[i, "content_cleaned"] = remove_sources(row.content)
 
+
 # %%
+# create a CountVectorizer from raw data, with options to clean it
 cv = CountVectorizer(min_df = 2, lowercase = True, token_pattern=r'(?u)\b[A-Za-z]{2,}\b', 
                         strip_accents = 'ascii', ngram_range = (1, 1), 
                         stop_words = 'english')
@@ -77,11 +92,15 @@ cv_matrix_df = pandas.DataFrame(cv_matrix, columns=vocab)
 
 """====================================================================="""
 # %% [markdown]
-### Data Exploration
+# ## Data Exploration
 
 # %%
 # bar plot of the count of unique things in each category
 train_data.groupby('category').headline.count().plot.bar(ylim = 0)
+plt.title("Category count raw data")
+plt.show()
+train_data_sample.groupby('category').headline.count().plot.bar(ylim = 0)
+plt.title("Category count sample data")
 plt.show()
 
 # %%
@@ -89,6 +108,7 @@ plt.show()
 print(pandas.DataFrame(train_data_sample.groupby(['category']).count()))
 
 # %%
+# print a count of observations and features
 print("There are {} observations and {} features in this dataset. \n".\
     format(cv_matrix_df.shape[0],cv_matrix_df.shape[1]))
 
@@ -97,12 +117,13 @@ print("There are {} observations and {} features in this dataset. \n".\
 categories = train_data_sample.groupby("category")
 categories.describe().head()
 
+# %% [markdown]
+# ### WordCloud/TagCloud of the top words in the headlines
+
 # %%
 # prepare the dictionary to be used in wordcloud
-# word_count = []
 word_count_dict = {}
 for word in vocab:
-    # word_count.append(sum(cv_matrix_df.loc[:, word]))
     word_count_dict[word] = int(sum(cv_matrix_df.loc[:, word]))
 
 # %%
