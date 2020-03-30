@@ -100,28 +100,21 @@ categories.describe().head()
 # %%
 # prepare the dictionary to be used in wordcloud
 # word_count = []
-text = {}
+word_count_dict = {}
 for word in vocab:
     # word_count.append(sum(cv_matrix_df.loc[:, word]))
-    text[word] = int(sum(cv_matrix_df.loc[:, word]))
+    word_count_dict[word] = int(sum(cv_matrix_df.loc[:, word]))
 
 # %%
-<<<<<<< HEAD
 # generate a word cloud image with top 100 words and 80% horizontal:
 wordcloud = WordCloud(max_words=100, prefer_horizontal=0.8, background_color='white').\
             generate_from_frequencies(word_count_dict)
-=======
-# generate a word cloud image with top 50 words and 80% horizontal:
-wordcloud = WordCloud(max_words=50, prefer_horizontal=0.8).\
-            generate_from_frequencies(text)
->>>>>>> parent of d59e95a... content "sources" cleaned
 
 # display the generated image:
 plt.imshow(wordcloud, interpolation='bilinear')
 plt.axis("off")
 plt.show()
 
-<<<<<<< HEAD
 # %% [markdown]
 # ### Plots of the data
 
@@ -138,8 +131,6 @@ freq_df.plot(kind='bar', x='Top 20 words');
 plt.show()
 
 
-=======
->>>>>>> parent of d59e95a... content "sources" cleaned
 # %%
 # table of the top 10 words
 #vocab_df = pandas.DataFrame(vocab)
