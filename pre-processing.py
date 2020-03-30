@@ -147,9 +147,7 @@ counter = Counter(word_count_dict)
 
 freq_df = pandas.DataFrame.from_records(counter.most_common(20),
                                         columns=['Top 20 words', 'Frequency'])
-plt.title("Bar chart of top 20 most common words")
 freq_df.plot(kind='bar', x='Top 20 words');
-plt.show()
 
 
 # %%
