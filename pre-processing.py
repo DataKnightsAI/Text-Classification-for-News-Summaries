@@ -13,24 +13,33 @@ import numpy
 from sklearn.feature_selection import chi2
 from PIL import Image
 from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
+from collections import Counter
+import re
+import sqlite3
 
-"""====================================================================="""
 # %% [markdown]
 # ## Read in the data
 
 # %%
-train_data = pandas.read_csv("./data/train.csv")
+train_data = pandas.read_csv('./data/train.csv', header=None)
 train_data.head()
 
-"""====================================================================="""
+# %% [markdown]
+# ## Use a SQLite3 database to save necessary data
+db = sqlite3.connect('newsclassifier.db')
+cat_list = pandas.read_csv('./data/classes.txt', header=None)
+cat_list.head()
+cat_list.to_sql("category_list", db, if_exists='replace')
+
+
 # %% [markdown]
 # ## Data Cleaning
 
 # %%
+# ### Add headers to the data
 train_data.columns = ['category', 'headline', 'content']
 train_data.head()
 
-"""====================================================================="""
 # %% [markdown]
 # ### Sample 1000 rows
 
@@ -40,14 +49,12 @@ train_data_sample.head()
 
 # %%
 # Clean HTML code & news sources from headline
-import re
-
 def clean(x):
     x = re.sub(r'(&[A-Za-z]+)|\(.*\)', '', x)
     return str(x)
 
 for i, row in train_data_sample.iterrows():
-    train_data_sample.at[i, "headline"] = clean(row.headline)
+    train_data_sample.at[i, "headline_cleaned"] = clean(row.headline)
 
 # %%
 # clean news sources from content
@@ -76,6 +83,11 @@ def remove_sources(x):
 for i, row in train_data_sample.iterrows():
     train_data_sample.at[i, "content_cleaned"] = remove_sources(row.content)
 
+# %% [markdown]
+# ### Save the new dataframe with cleaned headline and content to database
+
+#%%
+train_data_sample.to_sql('train_data_sample', db, if_exists='replace')
 
 # %%
 # create a CountVectorizer from raw data, with options to clean it
@@ -90,7 +102,12 @@ vocab = cv.get_feature_names()
 # produce a dataframe including the feature names
 cv_matrix_df = pandas.DataFrame(cv_matrix, columns=vocab)
 
-"""====================================================================="""
+# %% [markdown]
+# ### Save the bag of words
+
+# %%
+cv_matrix_df.to_sql('headline_bagofwords', db, if_exists='replace')
+
 # %% [markdown]
 # ## Data Exploration
 
@@ -104,7 +121,7 @@ plt.title("Category count sample data")
 plt.show()
 
 # %%
-# print out the number of unique things in each category
+# print out the number of unique documents in each category
 print(pandas.DataFrame(train_data_sample.groupby(['category']).count()))
 
 # %%
@@ -141,21 +158,12 @@ plt.show()
 
 # bar plot of the top word counts
 
-from collections import Counter
-
 counter = Counter(word_count_dict)
 
 freq_df = pandas.DataFrame.from_records(counter.most_common(20),
                                         columns=['Top 20 words', 'Frequency'])
 freq_df.plot(kind='bar', x='Top 20 words');
 
-
-# %%
-# table of the top 10 words
-#vocab_df = pandas.DataFrame(vocab)
-#vocab_df.groupby()
-
-"""====================================================================="""
 # %% [markdown]
 ### TF/IDF
 
