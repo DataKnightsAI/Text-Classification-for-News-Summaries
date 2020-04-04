@@ -18,7 +18,7 @@ import nltk
 from keras.preprocessing import text
 from keras.utils import np_utils
 from keras.preprocessing import sequence
-import pydot 
+import pydot
 
 # %% [markdown]
 # ## Load in the data from the database
@@ -198,7 +198,7 @@ for x, y in generate_context_word_pairs(corpus=wids, window_size=window_size, vo
     if 0 not in x[0]:
         print('Context (X):', [id2word[w] for w in x[0]], '-> Target (Y):', id2word[numpy.argwhere(y[0])[0][0]])
     
-        if i == 10:
+        if i == 20:
             break
         i += 1
 
@@ -222,7 +222,6 @@ print(cbow.summary())
 from IPython.display import SVG
 from keras.utils.vis_utils import model_to_dot
 
-SVG(model_to_dot(cbow, show_shapes=True, show_layer_names=False, 
-                 rankdir='TB').create(prog='dot', format='svg'))
+SVG(model_to_dot(cbow, show_shapes=True, show_layer_names=False, rankdir='TB').create(prog='dot', format='svg'))
 
 # %%
