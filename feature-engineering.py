@@ -98,11 +98,11 @@ freq_df.plot(kind='bar', x='Top 20 words');
 # ### Unigram TF/IDF
 
 # %%
-tfidf_vect = TfidfVectorizer(sublinear_tf = True, min_df = 2, lowercase = True, 
+tfidf_vect = TfidfVectorizer(sublinear_tf = True, min_df = 1, lowercase = True, 
                              strip_accents = 'ascii', ngram_range = (1, 1), 
                              stop_words = 'english', use_idf = True, token_pattern=r'(?u)\b[A-Za-z]{2,}\b')
 tfidf_unigram = tfidf_vect.fit_transform(train_data_df.headline_cleaned).toarray()
-
+tfidf_fit = tfidf_vect.fit_transform(train_data_df.headline_cleaned)
 # get all unique words in the corpus
 vocab = tfidf_vect.get_feature_names()
 
@@ -130,7 +130,7 @@ tfidf_ngram.head()
 # %%
 tfidf_vect = TfidfVectorizer(analyzer = 'char', sublinear_tf = True, min_df = 2, 
                              lowercase = True, strip_accents = 'ascii', ngram_range = (2, 3), 
-                             stop_words = 'english', use_idf = True, token_pattern=r'\w{1,}')
+                             stop_words = 'english', use_idf = True, token_pattern=r'(?u)\b[A-Za-z]{2,}\b')
 tfidf_char = tfidf_vect.fit_transform(train_data_df.headline_cleaned).toarray()
 
 # get all unique words in the corpus
@@ -232,7 +232,7 @@ SVG(model_to_dot(cbow, show_shapes=True, show_layer_names=False, rankdir='TB').c
 # %%
 from sklearn.metrics.pairwise import cosine_similarity
 
-similarity_matrix = cosine_similarity(tfidf_ngram)
+similarity_matrix = cosine_similarity(tfidf_fit)
 similarity_df = pandas.DataFrame(similarity_matrix)
 similarity_df
 
@@ -255,7 +255,7 @@ plt.axhline(y=1.0, c='k', ls='--', lw=0.5)
 from scipy.cluster.hierarchy import fcluster
 max_dist = 1.0
 
-cluster_labels = fcluster(Z, max_dist, criterion='distance',)
+cluster_labels = fcluster(Z, max_dist, criterion='distance')
 cluster_labels = pandas.DataFrame(cluster_labels, columns=['ClusterLabel'])
 pandas.concat([train_data_df, cluster_labels], axis=1)
 
@@ -299,3 +299,6 @@ km.fit_transform(features)
 cluster_labels = km.labels_
 cluster_labels = pandas.DataFrame(cluster_labels, columns=['Cluster Label'])
 pandas.concat([train_data_df, cluster_labels], axis=1)
+
+
+# %%
