@@ -1,5 +1,7 @@
 # To add a new cell, type '# %%'
 # To add a new markdown cell, type '# %% [markdown]'
+# %% [markdown]
+# # Data Cleaning and Data Exploration 
 
 # %% [markdown]
 # ## Import necessary dependencies
@@ -16,6 +18,11 @@ from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
 from collections import Counter
 import re
 import sqlite3
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+import string
+import re
+
 
 # %% [markdown]
 # ## Read in the data
@@ -24,13 +31,9 @@ import sqlite3
 train_data = pandas.read_csv('./data/train.csv', header=None)
 train_data.head()
 
-# %% [markdown]
-# ## Use a SQLite3 database to save necessary data
-db = sqlite3.connect('newsclassifier.db')
-cat_list = pandas.read_csv('./data/classes.txt', header=None)
-cat_list.head()
-cat_list.to_sql("category_list", db, if_exists='replace')
-
+# %%
+test_data = pandas.read_csv("./data/test.csv", header=None)
+test_data.head()
 
 # %% [markdown]
 # ## Data Cleaning
@@ -40,54 +43,115 @@ cat_list.to_sql("category_list", db, if_exists='replace')
 train_data.columns = ['category', 'headline', 'content']
 train_data.head()
 
+# %%
+test_data.columns = ['category', 'headline', 'content']
+test_data.head()
+
 # %% [markdown]
-# ### Sample 1000 rows
+# ### Clean HTML code & news sources from headline
 
 # %%
-train_data_sample = train_data.sample(n = 1000, replace = False, random_state = 123)
+# Define a clean function: lowercase, strip HTML, punctuations, non-alpha, stopwords
+def clean(x):
+    # strip HTML and sources of the format eg. "&lt and (Reuters)"
+    x = re.sub(r'(&[A-Za-z]+)|\(.*\)', '', x)
+    # split into words
+    tokens = word_tokenize(x)
+    # convert to lower case
+    tokens = [w.lower() for w in tokens]
+    # remove punctuation from each word
+    table = str.maketrans('', '', string.punctuation)
+    stripped = [w.translate(table) for w in tokens]
+    # remove remaining tokens that are not alphabetic
+    words = [word for word in stripped if word.isalpha()]
+    # filter out stop words
+    stop_words = set(stopwords.words('english'))
+    words = [w for w in words if not w in stop_words]
+    # re-create document from words
+    doc = ' '.join(words)
+    return str(doc)
+
+# %%
+for i, row in train_data.iterrows():
+    train_data.at[i, "headline_cleaned"] = clean(row.headline)
+train_data.head()
+
+#%%
+for i, row in test_data.iterrows():
+    test_data.at[i, "headline_cleaned"] = clean(row.headline)
+test_data.head()
+
+# %% [markdown]
+# ### Clean news sources from content
+
+# %%
+# Function to clean out the dates
+def clean_dates(x):
+    x = re.sub(r'[0-9 ]*(January|February|March|April|May|June|July|August|September|October|November|December|JANUARY|FEBRUARY|MARCH|APRIL|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER|JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEPT|SEP|OCT|NOV|DEC|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sept|Sep|Oct|Nov|Dec)[., ]*[0-9]*[., ]*[0-9]*', ' ', x)
+    return x
+
+# Clean out the dates for training data
+for i, row in train_data.iterrows():
+    train_data.at[i, "content_cleaned"] = clean_dates(row.content)
+
+# Clean out the dates for testing data
+for i, row in test_data.iterrows():
+    test_data.at[i, "content_cleaned"] = clean_dates(row.content)
+
+#%%
+# Function to extract the sources
+def extract_sources(x):
+    sources = []
+    for sentence in x:
+        trimmed = sentence[:35]
+        temp = re.search(r'^[A-Za-z0-9\/,. ]*\(*[A-Za-z.]+\)* -', trimmed)
+        if temp is not None:
+            sources.append(temp.group())
+    sources = numpy.array(sources)
+    sources = numpy.unique(sources)
+    return sources
+
+# Call function to generate the sources list and save it
+sources = extract_sources(train_data.content_cleaned)
+sources = numpy.append(sources, extract_sources(test_data.content_cleaned))
+sources = numpy.unique(sources)
+
+# %%
+# Save the sources to a file
+numpy.savetxt("./data/news_sources_from_both.csv", sources, \
+             header='list', delimiter=',', fmt='%s')
+
+#%% [markdown]
+# #### Make sure to check and clean manually any invalid sources first before we use it below
+
+#%%
+# Use the sources list to clean out the news sources
+sources_df = pandas.read_csv("./data/news_sources_from_both_v1.csv")
+
+def remove_sources(x, sources):
+    x = str(x)
+    for i, source in sources.iterrows():
+        if source.list in x:
+            print(source.list)
+            x = x.replace(source.list, ' ')
+    return x
+
+for i, row in train_data.iterrows():
+    train_data.at[i, "content_cleaned"] = remove_sources(row.content, sources_df)
+
+for i, row in train_data.iterrows():
+    test_data.at[i, "content_cleaned"] = remove_sources(row.content, sources_df)
+
+# %% [markdown]
+# ### Sample 4000 rows
+
+# %%
+train_data_sample = train_data.sample(n = 4000, replace = False, random_state = 123)
 train_data_sample.head()
 
 # %%
-# Clean HTML code & news sources from headline
-def clean(x):
-    x = re.sub(r'(&[A-Za-z]+)|\(.*\)', '', x)
-    return str(x)
-
-for i, row in train_data_sample.iterrows():
-    train_data_sample.at[i, "headline_cleaned"] = clean(row.headline)
-
-# %%
-# clean news sources from content
-sources_data = pandas.read_csv("./data/news_sources_clean_v1.csv")
-
-def remove_sources(x):
-    x = str(x)
-    # print('X OUTSIDE OF LOOP:' + x)
-    for i, source in sources_data.iterrows():
-        source_list_string = str(sources_data.at[i, 'list'])
-        #print('source_list_string:' + source_list_string)
-        source_list_stripped = source_list_string.strip()
-        #print('source_list_stripped:' + source_list_stripped)
-        
-        if source_list_stripped in x:
-            # print('x at this point:' + x)
-            # print('source_list_stripped:' + source_list_stripped)
-            # print('row number: ' + str(i))
-            
-            #this doesn't work
-            x = x.replace(source_list_stripped, '')
-            #regex_expression = re.compile(source.list)
-            #x = re.sub(regex_expression, '', x)
-    return x
-
-for i, row in train_data_sample.iterrows():
-    train_data_sample.at[i, "content_cleaned"] = remove_sources(row.content)
-
-# %% [markdown]
-# ### Save the new dataframe with cleaned headline and content to database
-
-#%%
-train_data_sample.to_sql('train_data_sample', db, if_exists='replace')
+test_data_sample = test_data.sample(n = 4000, replace = False, random_state = 123)
+test_data_sample.head()
 
 # %%
 # create a CountVectorizer from raw data, with options to clean it
@@ -103,10 +167,20 @@ vocab = cv.get_feature_names()
 cv_matrix_df = pandas.DataFrame(cv_matrix, columns=vocab)
 
 # %% [markdown]
-# ### Save the bag of words
+# ### Use a SQLite3 database to save necessary data
 
 # %%
+db = sqlite3.connect('newsclassifier.db')
+cat_list = pandas.read_csv('./data/classes.txt', header=None)
+cat_list.head()
+cat_list.to_sql("category_list", db, if_exists='replace')
+train_data.to_sql('train_data', db, if_exists='replace')
+test_data.to_sql('test_data', db, if_exists='replace')
+train_data_sample.to_sql('train_data_sample', db, if_exists='replace')
+test_data_sample.to_sql('test_data_sample', db, if_exists='replace')
 cv_matrix_df.to_sql('headline_bagofwords', db, if_exists='replace')
+db.commit()
+db.close()
 
 # %% [markdown]
 # ## Data Exploration
@@ -162,16 +236,4 @@ counter = Counter(word_count_dict)
 
 freq_df = pandas.DataFrame.from_records(counter.most_common(20),
                                         columns=['Top 20 words', 'Frequency'])
-freq_df.plot(kind='bar', x='Top 20 words');
-
-# %% [markdown]
-### TF/IDF
-
-# # %%
-# tfidf = TfidfVectorizer(sublinear_tf = True, min_df = 0, norm = 'l2', lowercase = True, 
-#                         strip_accents = 'ascii', ngram_range = (1, 2), 
-#                         stop_words = 'english', use_idf = True, token_pattern=r'(?u)\b[A-Za-z]{2,}\b')
-# # tfidf = TfidfVectorizer(min_df=0, use_idf=True, lowercase=True, stop_words='english')
-# features = tfidf.fit_transform(train_data_sample.headline).toarray()
-# pandas.DataFrame(numpy.round(features, 2), columns = vocab)
-# features.shape()
+freq_df.plot(kind='bar', x='Top 20 words')
