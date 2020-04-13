@@ -20,14 +20,15 @@ from keras.preprocessing import text
 from keras.utils import np_utils
 from keras.preprocessing import sequence
 import pydot
+import seaborn as sns
 
 # %% [markdown]
 # ## Load in the data from the database
 
 # %%
-dbconn = sqlite3.connect('./data/newsclassifier.db')
-train_data_df = pandas.read_sql_query('SELECT * FROM train_data_sample', dbconn)
-headline_bagofwords_df = pandas.read_sql_query('SELECT * FROM headline_bagofwords', dbconn)
+dbconn = sqlite3.connect('./data/cleanedtraintest_v2.db')
+train_data_df = pandas.read_sql_query('SELECT * FROM train_data', dbconn)
+test_data_df = pandas.read_sql_query('SELECT * FROM test_data', dbconn)
 dbconn.commit()
 dbconn.close()
 
@@ -37,29 +38,53 @@ dbconn.close()
 # %%
 train_data_df.head()
 
-
-# %%
-headline_bagofwords_df.head()
-
-
 # %%
 train_data_df.drop('index', axis=1, inplace=True)
 train_data_df.head()
 
+# %%
+test_data_df.head()
 
 # %%
-headline_bagofwords_df.drop('index', axis=1, inplace=True)
-headline_bagofwords_df.head()
+test_data_df.drop('index', axis=1, inplace=True)
+test_data_df.head()
 
+# %% [markdown]
+# ### Sample 4000 rows
+
+# %%
+train_data_sample = train_data_df.sample(n = 4000, replace = False, random_state = 123)
+train_data_sample.head()
+
+# %%
+test_data_sample = test_data_df.sample(n = 4000, replace = False, random_state = 123)
+test_data_sample.head()
+
+# %% [markdown]
+# ### Let's make a Bag of Words
+# %%
+# Use countvectorizer to get a vector of words
+cv = CountVectorizer(min_df = 2, lowercase = True,
+                     token_pattern=r'(?u)\b[A-Za-z]{2,}\b', ngram_range = (1, 1))
+cv_matrix = cv.fit_transform(train_data_df.content_cleaned).toarray()
+
+# below is if wanted to define a specific category for the data.
+# cv_matrix = cv.fit_transform(train_data_df[train_data_df.category == 1].headline_cleaned).toarray()
+
+# get all unique words in the corpus
+vocab = cv.get_feature_names()
+
+# produce a dataframe including the feature names
+headline_bagofwords_df = pandas.DataFrame(cv_matrix, columns=vocab)
+headline_bagofwords_df.head()
 
 # %% [markdown]
 # ### We have bag of words already, let's make a Bag of N-Grams
 # %%
-# Use countvectorizer to get a word vector
-cv = CountVectorizer(min_df = 2, lowercase = True, token_pattern=r'(?u)\b[A-Za-z]{2,}\b', 
-                        strip_accents = 'ascii', ngram_range = (2, 3), 
-                        stop_words = 'english')
-cv_matrix = cv.fit_transform(train_data_df.headline_cleaned).toarray()
+# Use countvectorizer to get a vector of ngrams
+cv = CountVectorizer(min_df = 2, lowercase = True,
+                     token_pattern=r'(?u)\b[A-Za-z]{2,}\b', ngram_range = (2, 3))
+cv_matrix = cv.fit_transform(train_data_df[train_data_df.category == 4].content_cleaned).toarray()
 
 # below is if wanted to define a specific category for the data.
 # cv_matrix = cv.fit_transform(train_data_df[train_data_df.category == 1].headline_cleaned).toarray()
@@ -69,11 +94,6 @@ vocab = cv.get_feature_names()
 
 # produce a dataframe including the feature names
 headline_bagofngrams_df = pandas.DataFrame(cv_matrix, columns=vocab)
-
-# %% [markdown]
-# ### Make sure we got the dataframe output for the Bag of N-Grams
-
-# %%
 headline_bagofngrams_df.head()
 
 # %% [markdown]
@@ -86,10 +106,22 @@ for word in vocab:
 
 counter = Counter(word_count_dict)
 
-freq_df = pandas.DataFrame.from_records(counter.most_common(20),
-                                        columns=['Top 20 words', 'Frequency'])
-freq_df.plot(kind='bar', x='Top 20 words');
+freq_df = pandas.DataFrame.from_records(counter.most_common(40),
+                                        columns=['Top 40 words', 'Frequency'])
 
+plt.figure(figsize=(10,5))
+chart = sns.barplot(
+    data=freq_df,
+    x='Top 40 words',
+    y='Frequency'
+)
+
+chart.set_xticklabels(
+    chart.get_xticklabels(), 
+    rotation=45, 
+    horizontalalignment='right',
+    fontweight='light'
+)
 
 # %% [markdown]
 # ## TF/IDF
@@ -98,9 +130,8 @@ freq_df.plot(kind='bar', x='Top 20 words');
 # ### Unigram TF/IDF
 
 # %%
-tfidf_vect = TfidfVectorizer(sublinear_tf = True, min_df = 1, lowercase = True, 
-                             strip_accents = 'ascii', ngram_range = (1, 1), 
-                             stop_words = 'english', use_idf = True, token_pattern=r'(?u)\b[A-Za-z]{2,}\b')
+tfidf_vect = TfidfVectorizer(sublinear_tf = True, min_df = 2, ngram_range = (1, 1), 
+                             use_idf = True, token_pattern=r'(?u)\b[A-Za-z]{2,}\b')
 tfidf_unigram = tfidf_vect.fit_transform(train_data_df.headline_cleaned).toarray()
 tfidf_fit = tfidf_vect.fit_transform(train_data_df.headline_cleaned)
 # get all unique words in the corpus
@@ -113,9 +144,8 @@ tfidf_unigram.head()
 # ### N-Gram TF/IDF
 
 # %%
-tfidf_vect = TfidfVectorizer(sublinear_tf = True, min_df = 2, lowercase = True, 
-                             strip_accents = 'ascii', ngram_range = (2, 3), 
-                             stop_words = 'english', use_idf = True, token_pattern=r'(?u)\b[A-Za-z]{2,}\b')
+tfidf_vect = TfidfVectorizer(sublinear_tf = True, min_df = 2, ngram_range = (2, 3), 
+                             use_idf = True, token_pattern=r'(?u)\b[A-Za-z]{2,}\b')
 tfidf_ngram = tfidf_vect.fit_transform(train_data_df.headline_cleaned).toarray()
 
 # get all unique words in the corpus
@@ -129,8 +159,8 @@ tfidf_ngram.head()
 
 # %%
 tfidf_vect = TfidfVectorizer(analyzer = 'char', sublinear_tf = True, min_df = 2, 
-                             lowercase = True, strip_accents = 'ascii', ngram_range = (2, 3), 
-                             stop_words = 'english', use_idf = True, token_pattern=r'(?u)\b[A-Za-z]{2,}\b')
+                             ngram_range = (2, 3), use_idf = True, 
+                             token_pattern=r'(?u)\b[A-Za-z]{2,}\b')
 tfidf_char = tfidf_vect.fit_transform(train_data_df.headline_cleaned).toarray()
 
 # get all unique words in the corpus
