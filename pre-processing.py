@@ -59,11 +59,11 @@ def clean(x):
     tokens = word_tokenize(x)
     # convert to lower case
     tokens = [w.lower() for w in tokens]
-    # remove punctuation from each word
-    table = str.maketrans('', '', string.punctuation)
-    stripped = [w.translate(table) for w in tokens]
+    # # remove punctuation from each word
+    # table = str.maketrans(string.punctuation, ' ')
+    # stripped = [w.translate(table) for w in tokens]
     # remove remaining tokens that are not alphabetic
-    words = [word for word in stripped if word.isalpha()]
+    words = [word for word in tokens if word.isalpha()]
     # filter out stop words
     stop_words = set(stopwords.words('english'))
     words = [w for w in words if not w in stop_words]
@@ -76,7 +76,7 @@ for i, row in train_data.iterrows():
     train_data.at[i, "headline_cleaned"] = clean(row.headline)
 train_data.head()
 
-#%%
+# %%
 for i, row in test_data.iterrows():
     test_data.at[i, "headline_cleaned"] = clean(row.headline)
 test_data.head()
@@ -98,7 +98,7 @@ for i, row in train_data.iterrows():
 for i, row in test_data.iterrows():
     test_data.at[i, "content_cleaned"] = clean_dates(row.content)
 
-#%%
+# %%
 # Function to extract the sources
 def extract_sources(x):
     sources = []
@@ -121,26 +121,37 @@ sources = numpy.unique(sources)
 numpy.savetxt("./data/news_sources_from_both.csv", sources, \
              header='list', delimiter=',', fmt='%s')
 
-#%% [markdown]
-# #### Make sure to check and clean manually any invalid sources first before we use it below
+# %% [markdown]
+# #### STOP! Make sure to check and clean manually any invalid sources first
+# Manually go into the csv file to clean it out before running below!
 
-#%%
+# %%
 # Use the sources list to clean out the news sources
-sources_df = pandas.read_csv("./data/news_sources_from_both_v1.csv")
+sources_df = pandas.read_csv("./data/news_sources_from_both_v1.csv", sep='\n')
 
+# %%
 def remove_sources(x, sources):
     x = str(x)
     for i, source in sources.iterrows():
         if source.list in x:
-            print(source.list)
             x = x.replace(source.list, ' ')
     return x
 
 for i, row in train_data.iterrows():
-    train_data.at[i, "content_cleaned"] = remove_sources(row.content, sources_df)
+    train_data.at[i, "content_nosources"] = remove_sources(row.content_cleaned, sources_df)
 
+for i, row in test_data.iterrows():
+    test_data.at[i, "content_nosources"] = remove_sources(row.content_cleaned, sources_df)
+
+# %%
 for i, row in train_data.iterrows():
-    test_data.at[i, "content_cleaned"] = remove_sources(row.content, sources_df)
+    train_data.at[i, "content_cleaned"] = clean(row.content_nosources)
+train_data.head()
+
+# %%
+for i, row in test_data.iterrows():
+    test_data.at[i, "content_cleaned"] = clean(row.content_nosources)
+test_data.head()
 
 # %% [markdown]
 # ### Sample 4000 rows
@@ -155,9 +166,8 @@ test_data_sample.head()
 
 # %%
 # create a CountVectorizer from raw data, with options to clean it
-cv = CountVectorizer(min_df = 2, lowercase = True, token_pattern=r'(?u)\b[A-Za-z]{2,}\b', 
-                        strip_accents = 'ascii', ngram_range = (1, 1), 
-                        stop_words = 'english')
+cv = CountVectorizer(min_df = 2, token_pattern=r'(?u)\b[A-Za-z]{2,}\b', 
+                    ngram_range = (1, 1), stop_words = 'english')
 cv_matrix = cv.fit_transform(train_data_sample.headline).toarray()
 
 # get all unique words in the corpus
@@ -166,11 +176,21 @@ vocab = cv.get_feature_names()
 # produce a dataframe including the feature names
 cv_matrix_df = pandas.DataFrame(cv_matrix, columns=vocab)
 
+#<<<<<<<<<<<<< compared with this (less stopwords removed)>>>>>>>>>>>>>>>>>
+# cv2 = CountVectorizer(min_df = 2, token_pattern=r'(?u)\b[A-Za-z]{2,}\b', ngram_range = (1, 1))
+# cv_matrix2 = cv2.fit_transform(train_data_sample.headline).toarray()
+
+# # get all unique words in the corpus
+# vocab2 = cv2.get_feature_names()
+
+# # produce a dataframe including the feature names
+# cv_matrix_df2 = pandas.DataFrame(cv_matrix2, columns=vocab2)
+
 # %% [markdown]
 # ### Use a SQLite3 database to save necessary data
 
 # %%
-db = sqlite3.connect('newsclassifier.db')
+db = sqlite3.connect('./data/newsclassifier.db')
 cat_list = pandas.read_csv('./data/classes.txt', header=None)
 cat_list.head()
 cat_list.to_sql("category_list", db, if_exists='replace')
@@ -178,9 +198,13 @@ train_data.to_sql('train_data', db, if_exists='replace')
 test_data.to_sql('test_data', db, if_exists='replace')
 train_data_sample.to_sql('train_data_sample', db, if_exists='replace')
 test_data_sample.to_sql('test_data_sample', db, if_exists='replace')
-cv_matrix_df.to_sql('headline_bagofwords', db, if_exists='replace')
+#cv_matrix_df.to_sql('headline_bagofwords', db, if_exists='replace') <- sqlite columns max 2000
 db.commit()
 db.close()
+
+# %%
+train_data.to_csv('./data/cleanedtrain.csv')
+test_data.to_csv('./data/cleanedtest.csv')
 
 # %% [markdown]
 # ## Data Exploration
