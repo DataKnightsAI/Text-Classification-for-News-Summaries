@@ -71,9 +71,6 @@ cv = CountVectorizer(min_df = 2, lowercase = True,
                      token_pattern=r'\b[A-Za-z]{2,}\b', ngram_range = (1, 1))
 cv_matrix = cv.fit_transform(train_data_sample.content_cleaned).toarray()
 
-# below is if wanted to define a specific category for the data.
-# cv_matrix = cv.fit_transform(train_data_df[train_data_df.category == 1].headline_cleaned).toarray()
-
 # get all unique words in the corpus
 vocab = cv.get_feature_names()
 
@@ -88,9 +85,6 @@ headline_bagofwords_df.head()
 cv = CountVectorizer(min_df = 2, lowercase = True,
                      token_pattern=r'\b[A-Za-z]{2,}\b', ngram_range = (2, 3))
 cv_matrix = cv.fit_transform(train_data_sample.content_cleaned).toarray()
-
-# below is if wanted to define a specific category for the data.
-# cv_matrix = cv.fit_transform(train_data_df[train_data_df.category == 1].headline_cleaned).toarray()
 
 # get all unique words in the corpus
 vocab = cv.get_feature_names()
@@ -398,6 +392,78 @@ km.fit_transform(features)
 cluster_labels = km.labels_
 cluster_labels = pandas.DataFrame(cluster_labels, columns=['Cluster Label'])
 pandas.concat([train_data_sample, cluster_labels], axis=1)
+
+# %% [markdown]
+# ## Using gensim to build Word2Vec
+
+# %%
+from gensim.models import word2vec
+
+# tokenize sentences in corpus
+wpt = nltk.WordPunctTokenizer()
+tokenized_corpus = [wpt.tokenize(document) for document in train_data_df.headline_cleaned]
+
+# Set values for various parameters
+feature_size = 100    # Word vector dimensionality  
+window_context = 20          # Context window size      
+workers = 10                                                                              
+min_word_count = 5   # Minimum word count                        
+sample = 1e-3   # Downsample setting for frequent words
+
+w2v_model = word2vec.Word2Vec(tokenized_corpus, size=feature_size, 
+                          window=window_context, min_count=min_word_count,
+                          sample=sample, iter=500)
+
+# %% [markdown]
+# ### Visualize Word Embedding
+
+# %%
+from sklearn.manifold import TSNE
+words = w2v_model.wv.index2word
+wvs = w2v_model.wv[words]
+tsne = TSNE(n_components=2, random_state=0, n_iter=500, perplexity=2)
+numpy.set_printoptions(suppress=True)
+T = tsne.fit_transform(wvs)
+labels = words
+plt.figure(figsize=(12, 6))
+plt.scatter(T[:, 0], T[:, 1], c='orange', edgecolors='r')
+for label, x, y in zip(labels, T[:, 0], T[:, 1]):
+ plt.annotate(label, xy=(x+1, y+1), xytext=(0, 0), textcoords='offset points')
+
+# %% [markdown]
+# ### Functions to get document level embeddings
+# ### The idea is to distill a word vector of 'n' features into a single point and use that at a document level
+
+# %%
+def average_word_vectors(words, model, vocabulary, num_features):
+
+ feature_vector = numpy.zeros((num_features,),dtype="float64")
+ nwords = 0.
+
+ for word in words:
+    if word in vocabulary:
+      nwords = nwords + 1.
+      feature_vector = numpy.add(feature_vector, model[word])
+
+ if nwords:
+    feature_vector = numpy.divide(feature_vector, nwords)
+
+ return feature_vector
+
+
+def averaged_word_vectorizer(corpus, model, num_features):
+ vocabulary = set(model.wv.index2word)
+ features = [average_word_vectors(tokenized_sentence, model, vocabulary, num_features)
+            for tokenized_sentence in corpus]
+ return numpy.array(features)
+
+# %% [markdown]
+# ### Obtain document level embeddings
+
+# %%
+w2v_feature_array = averaged_word_vectorizer(corpus=tokenized_corpus, model=w2v_model,
+                                            num_features=feature_size)
+pandas.DataFrame(w2v_feature_array)
 
 # %% [markdown]
 # ## Perform SVM as a baseline model and evaluate it.
