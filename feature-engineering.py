@@ -24,6 +24,12 @@ from keras.utils import np_utils
 from keras.preprocessing import sequence
 import pydot
 import seaborn as sns
+from sklearn.metrics import precision_recall_curve # The average precision score in multi-label settings
+from sklearn.metrics import average_precision_score
+from sklearn import svm # Support Vector Machine
+from sklearn.preprocessing import label_binarize # Split category encoding eg. y=[1,2,3] into y1=[0,1], y2=[0,1], y3=[0,1]
+from sklearn.model_selection import train_test_split # Built-in train test splitter
+from sklearn.multiclass import OneVsRestClassifier # We use OneVsRestClassifier for multi-label prediction
 
 # %% [markdown]
 # ## Load in the data from the database
@@ -191,81 +197,6 @@ chart.set_xticklabels(
 )
 
 # %% [markdown]
-# ## Word Embedding
-
-# # Build the Corpus Vocabulary
-
-# tokenizer = text.Tokenizer()
-# tokenizer.fit_on_texts(train_data_sample.headline_cleaned)
-# word2id = tokenizer.word_index
-
-# # build vocabulary of unique words
-# word2id['PAD'] = 0
-# id2word = {v:k for k, v in word2id.items()}
-# wids = [[word2id[w] for w in text.text_to_word_sequence(doc)] for doc in train_data_sample.headline_cleaned]
-
-# vocab_size = len(word2id)
-# embed_size = 100
-# window_size = 2 # context window size
-
-# print('Vocabulary Size:', vocab_size)
-# print('Vocabulary Sample:', list(word2id.items())[:100])
-
-# # %% 
-# # Build a CBOW (context, target) generator
-# def generate_context_word_pairs(corpus, window_size, vocab_size):
-#     context_length = window_size*2
-#     for words in corpus:
-#         sentence_length = len(words)
-#         for index, word in enumerate(words):
-#             context_words = []
-#             label_word   = []            
-#             start = index - window_size
-#             end = index + window_size + 1
-            
-#             context_words.append([words[i] 
-#                                  for i in range(start, end) 
-#                                  if 0 <= i < sentence_length 
-#                                  and i != index])
-#             label_word.append(word)
-
-#             x = sequence.pad_sequences(context_words, maxlen=context_length)
-#             y = np_utils.to_categorical(label_word, vocab_size)
-#             yield (x, y)
-
-# # Test this out for some samples
-# i = 0
-# for x, y in generate_context_word_pairs(corpus=wids, window_size=window_size, vocab_size=vocab_size):
-#     if 0 not in x[0]:
-#         print('Context (X):', [id2word[w] for w in x[0]], '-> Target (Y):', id2word[numpy.argwhere(y[0])[0][0]])
-    
-#         if i == 20:
-#             break
-#         i += 1
-
-# # %%
-# import keras.backend as K
-# from keras.models import Sequential
-# from keras.layers import Dense, Embedding, Lambda
-
-# # Build CBOW architecture
-# cbow = Sequential()
-# cbow.add(Embedding(input_dim=vocab_size, output_dim=embed_size, input_length=window_size*2))
-# cbow.add(Lambda(lambda x: K.mean(x, axis=1), output_shape=(embed_size,)))
-# cbow.add(Dense(vocab_size, activation='softmax'))
-# cbow.compile(loss='categorical_crossentropy', optimizer='rmsprop')
-
-# # view model summary
-# print(cbow.summary())
-
-# # visualize model structure
-# from IPython.display import SVG
-# from keras.utils.vis_utils import model_to_dot
-
-# SVG(model_to_dot(cbow, show_shapes=True, show_layer_names=False, rankdir='TB').create(prog='dot', format='svg'))
-
-
-# %% [markdown]
 # ## Document Similarity
 
 # %%
@@ -327,30 +258,6 @@ plt.scatter(
 plt.legend(scatterpoints=1)
 plt.grid()
 plt.show()
-
-
-# %%
-# # ### Cluster using similarity features
-# from scipy.cluster.hierarchy import dendrogram, linkage
-
-# Z = linkage(similarity_matrix, 'ward')
-# print(pandas.DataFrame(Z, columns=['Document\Cluster 1', 'Document\Cluster 2', 
-#                          'Distance', 'Cluster Size'], dtype='object'))
-
-# plt.figure(figsize=(8, 3))
-# plt.title('Hierarchical Clustering Dendrogram')
-# plt.xlabel('Data point')
-# plt.ylabel('Distance')
-# dendrogram(Z)
-# plt.axhline(y=1.0, c='k', ls='--', lw=0.5)
-
-# # %%
-# from scipy.cluster.hierarchy import fcluster
-# max_dist = 1.0
-
-# cluster_labels = fcluster(Z, max_dist, criterion='distance')
-# cluster_labels = pandas.DataFrame(cluster_labels, columns=['ClusterLabel'])
-# pandas.concat([train_data_sample, cluster_labels], axis=1)
 
 # %% [markdown]
 # ## LDA Model for features
@@ -469,11 +376,6 @@ pandas.DataFrame(w2v_feature_array)
 # ## Perform SVM as a baseline model and evaluate it.
 
 # %%
-from sklearn import svm
-from sklearn.preprocessing import label_binarize
-from sklearn.model_selection import train_test_split
-from sklearn.multiclass import OneVsRestClassifier # We use OneVsRestClassifier for multi-label prediction
-
 # Use label_binarize to be multi-label like settings
 X = train_data_sample['content_cleaned']
 y = train_data_sample['category']
@@ -502,9 +404,6 @@ y_score = classifier.decision_function(X_test_cv)
 
 # %%
 # The average precision score in multi-label settings
-from sklearn.metrics import precision_recall_curve
-from sklearn.metrics import average_precision_score
-
 # For each class
 precision = dict()
 recall = dict()
@@ -535,6 +434,9 @@ plt.title(
     'Average precision score, micro-averaged over all classes: AP={0:0.2f}'
     .format(average_precision["micro"]))
 
+#%%
+#===================================<experimental code below>===================================
+
 # %%
 # from sklearn.naive_bayes import MultinomialNB
 # naive_bayes = MultinomialNB()
@@ -554,3 +456,100 @@ plt.title(
 # xticklabels=['Business', 'Sports'], yticklabels=['Business', 'Sports'])
 # plt.xlabel('true label')
 # plt.ylabel('predicted label')
+
+# %% [markdown]
+# ## Word Embedding
+
+# # Build the Corpus Vocabulary
+
+# tokenizer = text.Tokenizer()
+# tokenizer.fit_on_texts(train_data_sample.headline_cleaned)
+# word2id = tokenizer.word_index
+
+# # build vocabulary of unique words
+# word2id['PAD'] = 0
+# id2word = {v:k for k, v in word2id.items()}
+# wids = [[word2id[w] for w in text.text_to_word_sequence(doc)] for doc in train_data_sample.headline_cleaned]
+
+# vocab_size = len(word2id)
+# embed_size = 100
+# window_size = 2 # context window size
+
+# print('Vocabulary Size:', vocab_size)
+# print('Vocabulary Sample:', list(word2id.items())[:100])
+
+# # %% 
+# # Build a CBOW (context, target) generator
+# def generate_context_word_pairs(corpus, window_size, vocab_size):
+#     context_length = window_size*2
+#     for words in corpus:
+#         sentence_length = len(words)
+#         for index, word in enumerate(words):
+#             context_words = []
+#             label_word   = []            
+#             start = index - window_size
+#             end = index + window_size + 1
+            
+#             context_words.append([words[i] 
+#                                  for i in range(start, end) 
+#                                  if 0 <= i < sentence_length 
+#                                  and i != index])
+#             label_word.append(word)
+
+#             x = sequence.pad_sequences(context_words, maxlen=context_length)
+#             y = np_utils.to_categorical(label_word, vocab_size)
+#             yield (x, y)
+
+# # Test this out for some samples
+# i = 0
+# for x, y in generate_context_word_pairs(corpus=wids, window_size=window_size, vocab_size=vocab_size):
+#     if 0 not in x[0]:
+#         print('Context (X):', [id2word[w] for w in x[0]], '-> Target (Y):', id2word[numpy.argwhere(y[0])[0][0]])
+    
+#         if i == 20:
+#             break
+#         i += 1
+
+# # %%
+# import keras.backend as K
+# from keras.models import Sequential
+# from keras.layers import Dense, Embedding, Lambda
+
+# # Build CBOW architecture
+# cbow = Sequential()
+# cbow.add(Embedding(input_dim=vocab_size, output_dim=embed_size, input_length=window_size*2))
+# cbow.add(Lambda(lambda x: K.mean(x, axis=1), output_shape=(embed_size,)))
+# cbow.add(Dense(vocab_size, activation='softmax'))
+# cbow.compile(loss='categorical_crossentropy', optimizer='rmsprop')
+
+# # view model summary
+# print(cbow.summary())
+
+# # visualize model structure
+# from IPython.display import SVG
+# from keras.utils.vis_utils import model_to_dot
+
+# SVG(model_to_dot(cbow, show_shapes=True, show_layer_names=False, rankdir='TB').create(prog='dot', format='svg'))
+
+# %%
+# # ### Cluster using similarity features
+# from scipy.cluster.hierarchy import dendrogram, linkage
+
+# Z = linkage(similarity_matrix, 'ward')
+# print(pandas.DataFrame(Z, columns=['Document\Cluster 1', 'Document\Cluster 2', 
+#                          'Distance', 'Cluster Size'], dtype='object'))
+
+# plt.figure(figsize=(8, 3))
+# plt.title('Hierarchical Clustering Dendrogram')
+# plt.xlabel('Data point')
+# plt.ylabel('Distance')
+# dendrogram(Z)
+# plt.axhline(y=1.0, c='k', ls='--', lw=0.5)
+
+# # %%
+# from scipy.cluster.hierarchy import fcluster
+# max_dist = 1.0
+
+# cluster_labels = fcluster(Z, max_dist, criterion='distance')
+# cluster_labels = pandas.DataFrame(cluster_labels, columns=['ClusterLabel'])
+# pandas.concat([train_data_sample, cluster_labels], axis=1)
