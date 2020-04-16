@@ -65,9 +65,20 @@ test_data_df.head()
 train_data_sample = train_data_df.sample(n = 4000, replace = False, random_state = 123)
 train_data_sample.head()
 
-# %%
+# %% 
 test_data_sample = test_data_df.sample(n = 4000, replace = False, random_state = 123)
 test_data_sample.head()
+
+# %% [markdown]
+# ## Train & Test data where x is the predictor features, y is the predicted feature
+
+n_classes = 4
+
+x_train = train_data_sample['content_cleaned']
+y_train = label_binarize(train_data_sample['category'], classes=[1, 2, 3, 4])
+
+x_test = test_data_sample['content_cleaned']
+y_test = label_binarize(test_data_sample['category'], classes=[1, 2, 3, 4])
 
 # %% [markdown]
 # ### Let's make a Bag of Words
@@ -75,14 +86,15 @@ test_data_sample.head()
 # Use countvectorizer to get a vector of words
 cv = CountVectorizer(min_df = 2, lowercase = True,
                      token_pattern=r'\b[A-Za-z]{2,}\b', ngram_range = (1, 1))
-cv_matrix = cv.fit_transform(train_data_sample.content_cleaned).toarray()
-
+x_train_cv = cv.fit_transform(x_train.content_cleaned).toarray()
+x_test_cv = cv.transform(x_test.content_cleaned)
 # get all unique words in the corpus
-vocab = cv.get_feature_names()
+bow_vocab = cv.get_feature_names()
 
 # produce a dataframe including the feature names
-headline_bagofwords_df = pandas.DataFrame(cv_matrix, columns=vocab)
-headline_bagofwords_df.head()
+x_train_bagofwords = pandas.DataFrame(x_train_cv, columns=bow_vocab)
+x_test_bagofwords = pandas.DataFrame(x_test_cv, columns=bow_vocab)
+x_train_bagofwords.head()
 
 # %% [markdown]
 # ### We have bag of words already, let's make a Bag of N-Grams
@@ -90,22 +102,33 @@ headline_bagofwords_df.head()
 # Use countvectorizer to get a vector of ngrams
 cv = CountVectorizer(min_df = 2, lowercase = True,
                      token_pattern=r'\b[A-Za-z]{2,}\b', ngram_range = (2, 3))
-cv_matrix = cv.fit_transform(train_data_sample.content_cleaned).toarray()
+cv_matrix = cv.fit_transform(x_train.content_cleaned).toarray()
 
 # get all unique words in the corpus
-vocab = cv.get_feature_names()
+ngram_vocab = cv.get_feature_names()
 
 # produce a dataframe including the feature names
-headline_bagofngrams_df = pandas.DataFrame(cv_matrix, columns=vocab)
-headline_bagofngrams_df.head()
+x_train_bagofngrams = pandas.DataFrame(cv_matrix, columns=ngram_vocab)
+x_train_bagofngrams.head()
+
+# %% 
+cv = CountVectorizer(analyzer='char', min_df = 2, ngram_range = (2, 3), 
+                     token_pattern=r'\b[A-Za-z]{2,}\b')
+cv_matrix = cv.fit_transform(x_train.content_cleaned).toarray()
+
+# get all unique words in the corpus
+cv_char_vocab = cv.get_feature_names()
+
+x_train_cv_char = pandas.DataFrame(cv_matrix, columns = cv_char_vocab)
+x_train_cv_char.head()
 
 # %% [markdown]
 # ### Let's explore the data we got through plots and tables
 
-# %%
+# %% Bar chart of Bag of Words frequency
 word_count_dict = {}
-for word in vocab:
-    word_count_dict[word] = int(sum(headline_bagofngrams_df.loc[:, word]))
+for word in bow_vocab:
+    word_count_dict[word] = int(sum(x_train_bagofwords.loc[:, word]))
 
 counter = Counter(word_count_dict)
 
@@ -126,56 +149,34 @@ chart.set_xticklabels(
     fontweight='light'
 )
 
-# %% [markdown]
-# ## TF/IDF
-
-# %% [markdown]
-# ### Unigram TF/IDF
-
-# %%
-tfidf_vect = TfidfVectorizer(sublinear_tf = True, min_df = 2, ngram_range = (1, 1), 
-                             use_idf = True, token_pattern=r'\b[A-Za-z]{2,}\b')
-tfidf_unigram = tfidf_vect.fit_transform(train_data_sample.content_cleaned).toarray()
-# get all unique words in the corpus
-vocab = tfidf_vect.get_feature_names()
-
-tfidf_unigram = pandas.DataFrame(numpy.round(tfidf_unigram, 2), columns = vocab)
-tfidf_unigram.head()
-
-# %% [markdown]
-# ### N-Gram TF/IDF
-
-# %%
-tfidf_vect = TfidfVectorizer(sublinear_tf = True, min_df = 2, ngram_range = (2, 3), 
-                             use_idf = True, token_pattern=r'\b[A-Za-z]{2,}\b')
-tfidf_ngram = tfidf_vect.fit_transform(train_data_sample.content_cleaned).toarray()
-
-# get all unique words in the corpus
-vocab = tfidf_vect.get_feature_names()
-
-tfidf_ngram = pandas.DataFrame(numpy.round(tfidf_ngram, 2), columns = vocab)
-tfidf_ngram.head()
-
-# %% [markdown]
-# ### Character TF/IDF
-
-# %%
-tfidf_vect = TfidfVectorizer(analyzer = 'char', sublinear_tf = True, min_df = 2, 
-                             ngram_range = (2, 3), use_idf = True, 
-                             token_pattern=r'\b[A-Za-z]{2,}\b')
-tfidf_char = tfidf_vect.fit_transform(train_data_sample.content_cleaned).toarray()
-tfidf_fit = tfidf_vect.fit_transform(train_data_sample.content_cleaned)
-
-# get all unique words in the corpus
-vocab = tfidf_vect.get_feature_names()
-
-tfidf_char = pandas.DataFrame(numpy.round(tfidf_char, 2), columns = vocab)
-tfidf_char.head()
-
-# %%
+# %% Bar chart of N-Grams frequency
 word_count_dict = {}
-for word in vocab:
-    word_count_dict[word] = int(sum(tfidf_char.loc[:, word]))
+for word in ngram_vocab:
+    word_count_dict[word] = int(sum(x_train_bagofngrams.loc[:, word]))
+
+counter = Counter(word_count_dict)
+
+freq_df = pandas.DataFrame.from_records(counter.most_common(40),
+                                        columns=['Top 40 words', 'Frequency'])
+
+plt.figure(figsize=(10,5))
+chart = sns.barplot(
+    data=freq_df,
+    x='Top 40 words',
+    y='Frequency'
+)
+
+chart.set_xticklabels(
+    chart.get_xticklabels(), 
+    rotation=45, 
+    horizontalalignment='right',
+    fontweight='light'
+)
+
+# %% Bar chart of Character grams frequency
+word_count_dict = {}
+for word in cv_char_vocab:
+    word_count_dict[word] = int(sum(x_train_cv_char.loc[:, word]))
 
 counter = Counter(word_count_dict)
 
@@ -190,11 +191,58 @@ chart = sns.barplot(
 )
 
 chart.set_xticklabels(
-    chart.get_xticklabels(), 
-    rotation=45, 
+    chart.get_xticklabels(),
+    rotation=45,
     horizontalalignment='right',
     fontweight='light'
 )
+
+# %% [markdown]
+# ## TF/IDF
+
+# %% [markdown]
+# ### Unigram TF/IDF
+
+# %%
+tfidf_vect = TfidfVectorizer(sublinear_tf = True, min_df = 2, ngram_range = (1, 1), 
+                             use_idf = True, token_pattern=r'\b[A-Za-z]{2,}\b')
+x_train_tfidf_unigram = tfidf_vect.fit_transform(x_train.content_cleaned).toarray()
+# get all unique words in the corpus
+vocab = tfidf_vect.get_feature_names()
+
+x_train_tfidf_unigram = pandas.DataFrame(numpy.round(x_train_tfidf_unigram, 2), columns = vocab)
+x_train_tfidf_unigram.head()
+
+# %% [markdown]
+# ### N-Gram TF/IDF
+
+# %%
+tfidf_vect = TfidfVectorizer(sublinear_tf = True, min_df = 2, ngram_range = (2, 3), 
+                             use_idf = True, token_pattern=r'\b[A-Za-z]{2,}\b')
+x_train_tfidf_ngram = tfidf_vect.fit_transform(x_train.content_cleaned).toarray()
+
+# get all unique words in the corpus
+vocab = tfidf_vect.get_feature_names()
+
+x_train_tfidf_ngram = pandas.DataFrame(numpy.round(x_train_tfidf_ngram, 2), columns = vocab)
+x_train_tfidf_ngram.head()
+
+# %% [markdown]
+# ### Character TF/IDF
+
+# %% 
+tfidf_vect = TfidfVectorizer(analyzer = 'char', sublinear_tf = True, min_df = 2, 
+                             ngram_range = (2, 3), use_idf = True, 
+                             token_pattern=r'\b[A-Za-z]{2,}\b')
+x_train_tfidf_char = tfidf_vect.fit_transform(x_train.content_cleaned).toarray()
+tfidf_fit = tfidf_vect.fit_transform(x_train.content_cleaned)
+
+# get all unique words in the corpus
+char_vocab = tfidf_vect.get_feature_names()
+
+x_train_tfidf_char = pandas.DataFrame(numpy.round(x_train_tfidf_char, 2), columns = char_vocab)
+x_train_tfidf_char.head()
+
 
 # %% [markdown]
 # ## Document Similarity
@@ -298,7 +346,7 @@ km = KMeans(n_clusters=4, random_state=0)
 km.fit_transform(features)
 cluster_labels = km.labels_
 cluster_labels = pandas.DataFrame(cluster_labels, columns=['Cluster Label'])
-pandas.concat([train_data_sample, cluster_labels], axis=1)
+pandas.concat([x_train, cluster_labels], axis=1)
 
 # %% [markdown]
 # ## Using gensim to build Word2Vec
@@ -308,7 +356,7 @@ from gensim.models import word2vec
 
 # tokenize sentences in corpus
 wpt = nltk.WordPunctTokenizer()
-tokenized_corpus = [wpt.tokenize(document) for document in train_data_df.headline_cleaned]
+tokenized_corpus = [wpt.tokenize(document) for document in x_train.content_cleaned]
 
 # Set values for various parameters
 feature_size = 100    # Word vector dimensionality  
@@ -377,19 +425,13 @@ pandas.DataFrame(w2v_feature_array)
 
 # %%
 # Use label_binarize to be multi-label like settings
-X = train_data_sample['content_cleaned']
-y = train_data_sample['category']
-Y = label_binarize(y, classes=[1, 2, 3, 4])
-n_classes = Y.shape[1]
-
-# Split into training and test
-X_train, X_test, y_train, y_test = train_test_split(X, Y, random_state=1)
-cv = CountVectorizer(min_df = 2, token_pattern=r'\b[A-Za-z]{2,}\b', ngram_range = (1, 1))
-X_train_cv = cv.fit_transform(X_train)
-X_test_cv = cv.transform(X_test)
+# X = x_train['content_cleaned']
+# y = x_train['category']
+# Y = label_binarize(y, classes=[1, 2, 3, 4])
+# n_classes = Y.shape[1]
 
 # %%
-word_freq_df = pandas.DataFrame(X_train_cv.toarray(), columns=cv.get_feature_names())
+word_freq_df = pandas.DataFrame(x_train_bagofwords.toarray(), columns=cv.get_feature_names())
 top_words_df = pandas.DataFrame(word_freq_df.sum()).sort_values(0, ascending=False)
 word_freq_df.head(20)
 
@@ -399,8 +441,8 @@ top_words_df.head(20)
 # %%
 # Run classifier
 classifier = OneVsRestClassifier(svm.LinearSVC(random_state=1))
-classifier.fit(X_train_cv, y_train)
-y_score = classifier.decision_function(X_test_cv)
+classifier.fit(x_train_bagofwords, y_train)
+y_score = classifier.decision_function(x_test_bagofwords)
 
 # %%
 # The average precision score in multi-label settings
@@ -463,7 +505,7 @@ plt.title(
 # # Build the Corpus Vocabulary
 
 # tokenizer = text.Tokenizer()
-# tokenizer.fit_on_texts(train_data_sample.headline_cleaned)
+# tokenizer.fit_on_texts(x_train.headline_cleaned)
 # word2id = tokenizer.word_index
 
 # # build vocabulary of unique words
