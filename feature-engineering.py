@@ -87,7 +87,7 @@ y_test = label_binarize(test_data_sample['category'], classes=[1, 2, 3, 4])
 cv = CountVectorizer(min_df = 2, lowercase = True,
                      token_pattern=r'\b[A-Za-z]{2,}\b', ngram_range = (1, 1))
 x_train_cv = cv.fit_transform(x_train.content_cleaned).toarray()
-x_test_cv = cv.transform(x_test.content_cleaned)
+x_test_cv = cv.transform(x_test.content_cleaned).toarray()
 # get all unique words in the corpus
 bow_vocab = cv.get_feature_names()
 
@@ -102,24 +102,27 @@ x_train_bagofwords.head()
 # Use countvectorizer to get a vector of ngrams
 cv = CountVectorizer(min_df = 2, lowercase = True,
                      token_pattern=r'\b[A-Za-z]{2,}\b', ngram_range = (2, 3))
-cv_matrix = cv.fit_transform(x_train.content_cleaned).toarray()
-
+x_train_cv = cv.fit_transform(x_train.content_cleaned).toarray()
+x_test_cv = cv.transform(x_test.content_cleaned).toarray()
 # get all unique words in the corpus
 ngram_vocab = cv.get_feature_names()
 
 # produce a dataframe including the feature names
-x_train_bagofngrams = pandas.DataFrame(cv_matrix, columns=ngram_vocab)
+x_train_bagofngrams = pandas.DataFrame(x_train_cv, columns=ngram_vocab)
+x_test_bagofwords = pandas.DataFrame(x_test_cv, columns=ngram_vocab)
 x_train_bagofngrams.head()
 
 # %% 
 cv = CountVectorizer(analyzer='char', min_df = 2, ngram_range = (2, 3), 
                      token_pattern=r'\b[A-Za-z]{2,}\b')
-cv_matrix = cv.fit_transform(x_train.content_cleaned).toarray()
+x_train_cv = cv.fit_transform(x_train.content_cleaned).toarray()
+x_test_cv = cv.transform(x_test.content_cleaned).toarray()
 
 # get all unique words in the corpus
 cv_char_vocab = cv.get_feature_names()
 
-x_train_cv_char = pandas.DataFrame(cv_matrix, columns = cv_char_vocab)
+x_train_cv_char = pandas.DataFrame(x_train_cv, columns = cv_char_vocab)
+x_test_bagofwords = pandas.DataFrame(x_test_cv, columns=cv_char_vocab)
 x_train_cv_char.head()
 
 # %% [markdown]
@@ -207,10 +210,12 @@ chart.set_xticklabels(
 tfidf_vect = TfidfVectorizer(sublinear_tf = True, min_df = 2, ngram_range = (1, 1), 
                              use_idf = True, token_pattern=r'\b[A-Za-z]{2,}\b')
 x_train_tfidf_unigram = tfidf_vect.fit_transform(x_train.content_cleaned).toarray()
+x_test_tfidf_unigram = tfidf_vect.transform(x_test.content_cleaned).toarray()
 # get all unique words in the corpus
 vocab = tfidf_vect.get_feature_names()
 
 x_train_tfidf_unigram = pandas.DataFrame(numpy.round(x_train_tfidf_unigram, 2), columns = vocab)
+x_test_tfidf_unigram = pandas.DataFrame(numpy.round(x_test_tfidf_unigram, 2), columns = vocab)
 x_train_tfidf_unigram.head()
 
 # %% [markdown]
@@ -220,11 +225,12 @@ x_train_tfidf_unigram.head()
 tfidf_vect = TfidfVectorizer(sublinear_tf = True, min_df = 2, ngram_range = (2, 3), 
                              use_idf = True, token_pattern=r'\b[A-Za-z]{2,}\b')
 x_train_tfidf_ngram = tfidf_vect.fit_transform(x_train.content_cleaned).toarray()
-
+x_test_tfidf_ngram = tfidf_vect.fit_transform(x_test.content_cleaned).toarray()
 # get all unique words in the corpus
 vocab = tfidf_vect.get_feature_names()
 
 x_train_tfidf_ngram = pandas.DataFrame(numpy.round(x_train_tfidf_ngram, 2), columns = vocab)
+x_test_tfidf_ngram = pandas.DataFrame(numpy.round(x_test_tfidf_ngram, 2), columns = vocab)
 x_train_tfidf_ngram.head()
 
 # %% [markdown]
@@ -235,12 +241,13 @@ tfidf_vect = TfidfVectorizer(analyzer = 'char', sublinear_tf = True, min_df = 2,
                              ngram_range = (2, 3), use_idf = True, 
                              token_pattern=r'\b[A-Za-z]{2,}\b')
 x_train_tfidf_char = tfidf_vect.fit_transform(x_train.content_cleaned).toarray()
-tfidf_fit = tfidf_vect.fit_transform(x_train.content_cleaned)
+x_test_tfidf_char = tfidf_vect.transform(x_test.content_cleaned).toarray()
 
 # get all unique words in the corpus
 char_vocab = tfidf_vect.get_feature_names()
 
 x_train_tfidf_char = pandas.DataFrame(numpy.round(x_train_tfidf_char, 2), columns = char_vocab)
+x_test_tfidf_char = pandas.DataFrame(numpy.round(x_test_tfidf_ngram, 2), columns = char_vocab)
 x_train_tfidf_char.head()
 
 
@@ -250,7 +257,7 @@ x_train_tfidf_char.head()
 # %%
 from sklearn.metrics.pairwise import cosine_similarity
 
-similarity_matrix = cosine_similarity(tfidf_fit)
+similarity_matrix = cosine_similarity(x_train_tfidf_ngram)
 similarity_df = pandas.DataFrame(similarity_matrix)
 similarity_df
 
@@ -313,7 +320,7 @@ plt.show()
 # %%
 # train a LDA Model
 lda_model = decomposition.LatentDirichletAllocation(n_components=5929, max_iter=20, learning_method='online')
-topics = lda_model.fit_transform(cv_matrix)
+topics = lda_model.fit_transform(x_train_tfidf_ngram)
 topic_word = lda_model.components_ 
 vocab = cv.get_feature_names()
 features = pandas.DataFrame(topics, columns=vocab)
