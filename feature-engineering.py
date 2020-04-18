@@ -31,6 +31,7 @@ from sklearn.preprocessing import label_binarize # Split category encoding eg. y
 from sklearn.model_selection import train_test_split # Built-in train test splitter
 from sklearn.multiclass import OneVsRestClassifier # We use OneVsRestClassifier for multi-label prediction
 from itertools import cycle
+from sklearn.feature_selection import SelectPercentile, f_classif
 
 # %% [markdown]
 # ## Load in the data from the database
@@ -87,15 +88,33 @@ y_test = label_binarize(test_data_sample.category, classes=[1, 2, 3, 4])
 # Use countvectorizer to get a vector of words
 cv = CountVectorizer(min_df = 2, lowercase = True,
                      token_pattern=r'\b[A-Za-z]{2,}\b', ngram_range = (1, 1))
-x_train_cv = cv.fit_transform(x_train).toarray()
-x_test_cv = cv.transform(x_test).toarray()
+x_train_cv = cv.fit_transform(x_train)
+x_test_cv = cv.transform(x_test)
+
+selector = SelectPercentile(f_classif, percentile=10)
+selector.fit(x_train_cv, train_data_sample.category)
+x_train_cv_10p = selector.transform(x_train_cv).toarray()
+x_test_cv_10p = selector.transform(x_test_cv).toarray()
+
 # get all unique words in the corpus
 bow_vocab = cv.get_feature_names()
+
+columns = numpy.asarray(bow_vocab)
+support = numpy.asarray(selector.get_support())
+bow_vocab_10p = columns[support]
+
+x_train_cv = x_train_cv.toarray()
+x_test_cv = x_test_cv.toarray()
 
 # produce a dataframe including the feature names
 x_train_bagofwords = pandas.DataFrame(x_train_cv, columns=bow_vocab)
 x_test_bagofwords = pandas.DataFrame(x_test_cv, columns=bow_vocab)
+x_train_bagofwords_10p = pandas.DataFrame(x_train_cv_10p, columns=bow_vocab_10p)
+x_test_bagofwords_10p = pandas.DataFrame(x_test_cv_10p, columns=bow_vocab_10p)
 x_train_bagofwords.head()
+
+#%%
+x_test_bagofwords_10p.head()
 
 # %% [markdown]
 # ### We have bag of words already, let's make a Bag of N-Grams
@@ -103,105 +122,105 @@ x_train_bagofwords.head()
 # Use countvectorizer to get a vector of ngrams
 cv = CountVectorizer(min_df = 2, lowercase = True,
                      token_pattern=r'\b[A-Za-z]{2,}\b', ngram_range = (2, 3))
-x_train_cv = cv.fit_transform(x_train).toarray()
-x_test_cv = cv.transform(x_test).toarray()
+x_train_cv = cv.fit_transform(x_train)
+x_test_cv = cv.transform(x_test)
+
 # get all unique words in the corpus
 ngram_vocab = cv.get_feature_names()
+
+selector = SelectPercentile(f_classif, percentile=10)
+selector.fit(x_train_cv, train_data_sample.category)
+x_train_cv_10p = selector.transform(x_train_cv).toarray()
+x_test_cv_10p = selector.transform(x_test_cv).toarray()
+
+columns = numpy.asarray(ngram_vocab)
+support = numpy.asarray(selector.get_support())
+ngram_vocab_10p = columns[support]
+
+x_train_cv = x_train_cv.toarray()
+x_test_cv = x_test_cv.toarray()
 
 # produce a dataframe including the feature names
 x_train_bagofngrams = pandas.DataFrame(x_train_cv, columns=ngram_vocab)
 x_test_bagofngrams = pandas.DataFrame(x_test_cv, columns=ngram_vocab)
+x_train_bagofngrams_10p = pandas.DataFrame(x_train_cv_10p, columns=ngram_vocab_10p)
+x_test_bagofngrams_10p = pandas.DataFrame(x_test_cv_10p, columns=ngram_vocab_10p)
 x_train_bagofngrams.head()
 
 # %% 
 # Use countvectorizer to get a vector of chars
 cv = CountVectorizer(analyzer='char', min_df = 2, ngram_range = (2, 3), 
                      token_pattern=r'\b[A-Za-z]{2,}\b')
-x_train_cv = cv.fit_transform(x_train).toarray()
-x_test_cv = cv.transform(x_test).toarray()
+x_train_cv = cv.fit_transform(x_train)
+x_test_cv = cv.transform(x_test)
 
 # get all unique words in the corpus
 cv_char_vocab = cv.get_feature_names()
 
+selector = SelectPercentile(f_classif, percentile=10)
+selector.fit(x_train_cv, train_data_sample.category)
+x_train_cv_10p = selector.transform(x_train_cv).toarray()
+x_test_cv_10p = selector.transform(x_test_cv).toarray()
+
+columns = numpy.asarray(cv_char_vocab)
+support = numpy.asarray(selector.get_support())
+cv_char_vocab_10p = columns[support]
+
+x_train_cv = x_train_cv.toarray()
+x_test_cv = x_test_cv.toarray()
+
 # produce a dataframe including the feature names
 x_train_cv_char = pandas.DataFrame(x_train_cv, columns = cv_char_vocab)
 x_test_cv_char = pandas.DataFrame(x_test_cv, columns=cv_char_vocab)
+x_train_cv_char_10p = pandas.DataFrame(x_train_cv_10p, columns = cv_char_vocab_10p)
+x_test_cv_char_10p = pandas.DataFrame(x_test_cv_10p, columns=cv_char_vocab_10p)
 x_train_cv_char.head()
 
 # %% [markdown]
 # ### Let's explore the data we got through plots and tables
 
-# %% Bar chart of Bag of Words frequency
-word_count_dict = {}
-for word in bow_vocab:
-    word_count_dict[word] = int(sum(x_train_bagofwords.loc[:, word]))
+# %% Function to show a barchart of the top 40 words
+def words_barchart(df, df_label):
+    word_count_dict = {}
+    for word in df_label:
+        word_count_dict[word] = int(sum(df.loc[:, word]))
 
-counter = Counter(word_count_dict)
+    counter = Counter(word_count_dict)
 
-freq_df = pandas.DataFrame.from_records(counter.most_common(40),
-                                        columns=['Top 40 words', 'Frequency'])
+    freq_df = pandas.DataFrame.from_records(counter.most_common(40),
+                                            columns=['Top 40 words', 'Frequency'])
 
-plt.figure(figsize=(10,5))
-chart = sns.barplot(
-    data=freq_df,
-    x='Top 40 words',
-    y='Frequency'
-)
+    plt.figure(figsize=(10,5))
+    chart = sns.barplot(
+        data=freq_df,
+        x='Top 40 words',
+        y='Frequency'
+    )
 
-chart.set_xticklabels(
-    chart.get_xticklabels(), 
-    rotation=45, 
-    horizontalalignment='right',
-    fontweight='light'
-)
+    chart.set_xticklabels(
+        chart.get_xticklabels(), 
+        rotation=45, 
+        horizontalalignment='right',
+        fontweight='light'
+    )
+
+#%% Bar chart of Bag of Words frequency
+words_barchart(x_train_bagofwords, bow_vocab)
 
 # %% Bar chart of N-Grams frequency
-word_count_dict = {}
-for word in ngram_vocab:
-    word_count_dict[word] = int(sum(x_train_bagofngrams.loc[:, word]))
-
-counter = Counter(word_count_dict)
-
-freq_df = pandas.DataFrame.from_records(counter.most_common(40),
-                                        columns=['Top 40 words', 'Frequency'])
-
-plt.figure(figsize=(10,5))
-chart = sns.barplot(
-    data=freq_df,
-    x='Top 40 words',
-    y='Frequency'
-)
-
-chart.set_xticklabels(
-    chart.get_xticklabels(), 
-    rotation=45, 
-    horizontalalignment='right',
-    fontweight='light'
-)
+words_barchart(x_train_bagofngrams, ngram_vocab)
 
 # %% Bar chart of Character grams frequency
-word_count_dict = {}
-for word in cv_char_vocab:
-    word_count_dict[word] = int(sum(x_train_cv_char.loc[:, word]))
+words_barchart(x_train_cv_char, cv_char_vocab)
 
-counter = Counter(word_count_dict)
+#%% Bar chart of Bag of Words frequency
+words_barchart(x_train_bagofwords_10p, bow_vocab_10p)
 
-freq_df = pandas.DataFrame.from_records(counter.most_common(40),
-                                        columns=['Top 40 chars', 'Frequency'])
+# %% Bar chart of N-Grams frequency
+words_barchart(x_train_bagofngrams_10p, ngram_vocab_10p)
 
-plt.figure(figsize=(10,5))
-chart = sns.barplot(
-    data=freq_df,
-    x='Top 40 chars',
-    y='Frequency'
-)
-
-chart.set_xticklabels(
-    chart.get_xticklabels(),
-    rotation=45,
-    horizontalalignment='right',
-    fontweight='light'
-)
+# %% Bar chart of Character grams frequency
+words_barchart(x_train_cv_char_10p, cv_char_vocab_10p)
 
 # %% [markdown]
 # ## TF/IDF
@@ -569,6 +588,15 @@ run_svm(x_train_tfidf_char, y_train, x_test_cv_char, 'TF/IDF Chars')
 
 #%%
 run_svm(x_train_w2v, y_train, x_test_w2v, 'Word2Vec')
+
+#%%
+run_svm(x_train_bagofwords_10p, y_train, x_test_bagofwords_10p, 'Bag of Words - 90th percentile')
+
+#%%
+run_svm(x_train_bagofngrams_10p, y_train, x_test_bagofngrams_10p, 'Bag of N-Grams - 90th percentile')
+
+#%%
+run_svm(x_train_cv_char_10p, y_train, x_test_cv_char_10p, 'Bag of Chars - 90th percentile')
 
 #%%
 #===================================<experimental code below>===================================
