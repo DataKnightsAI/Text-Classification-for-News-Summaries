@@ -375,7 +375,7 @@ tokenized_corpus_train = [wpt.tokenize(document) for document in x_train]
 tokenized_corpus_test = [wpt.tokenize(document) for document in x_test]
 
 # Set values for various parameters
-feature_size = 4000    # Word vector dimensionality  
+feature_size = 5000    # Word vector dimensionality  
 window_context = 20          # Context window size      
 workers = 12                                                                              
 min_word_count = 5   # Minimum word count                        
