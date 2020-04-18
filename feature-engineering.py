@@ -371,34 +371,38 @@ from gensim.models import word2vec
 
 # tokenize sentences in corpus
 wpt = nltk.WordPunctTokenizer()
-tokenized_corpus = [wpt.tokenize(document) for document in x_train]
+tokenized_corpus_train = [wpt.tokenize(document) for document in x_train]
+tokenized_corpus_test = [wpt.tokenize(document) for document in x_test]
 
 # Set values for various parameters
-feature_size = 100    # Word vector dimensionality  
+feature_size = 4000    # Word vector dimensionality  
 window_context = 20          # Context window size      
-workers = 10                                                                              
+workers = 12                                                                              
 min_word_count = 5   # Minimum word count                        
 sample = 1e-3   # Downsample setting for frequent words
 
-w2v_model = word2vec.Word2Vec(tokenized_corpus, size=feature_size, 
+w2v_model_train = word2vec.Word2Vec(tokenized_corpus_train, size=feature_size, 
                           window=window_context, min_count=min_word_count,
-                          sample=sample, iter=500)
+                          sample=sample, iter=50)
+w2v_model_test = word2vec.Word2Vec(tokenized_corpus_test, size=feature_size, 
+                          window=window_context, min_count=min_word_count,
+                          sample=sample, iter=50)
 
 # %% [markdown]
 # ### Visualize Word Embedding
 
 # %%
-from sklearn.manifold import TSNE
-words = w2v_model.wv.index2word
-wvs = w2v_model.wv[words]
-tsne = TSNE(n_components=2, random_state=0, n_iter=500, perplexity=2)
-numpy.set_printoptions(suppress=True)
-T = tsne.fit_transform(wvs)
-labels = words
-plt.figure(figsize=(12, 6))
-plt.scatter(T[:, 0], T[:, 1], c='orange', edgecolors='r')
-for label, x, y in zip(labels, T[:, 0], T[:, 1]):
- plt.annotate(label, xy=(x+1, y+1), xytext=(0, 0), textcoords='offset points')
+# from sklearn.manifold import TSNE
+# words = w2v_model.wv.index2word
+# wvs = w2v_model.wv[words]
+# tsne = TSNE(n_components=2, random_state=0, n_iter=500, perplexity=2)
+# numpy.set_printoptions(suppress=True)
+# T = tsne.fit_transform(wvs)
+# labels = words
+# plt.figure(figsize=(12, 6))
+# plt.scatter(T[:, 0], T[:, 1], c='orange', edgecolors='r')
+# for label, x, y in zip(labels, T[:, 0], T[:, 1]):
+#  plt.annotate(label, xy=(x+1, y+1), xytext=(0, 0), textcoords='offset points')
 
 # %% [markdown]
 # ### Functions to get document level embeddings
@@ -431,9 +435,19 @@ def averaged_word_vectorizer(corpus, model, num_features):
 # ### Obtain document level embeddings
 
 # %%
-w2v_feature_array = averaged_word_vectorizer(corpus=tokenized_corpus, model=w2v_model,
+w2v_feature_array_train = averaged_word_vectorizer(corpus=tokenized_corpus_train, model=w2v_model_train,
                                             num_features=feature_size)
-pandas.DataFrame(w2v_feature_array)
+w2v_feature_array_test = averaged_word_vectorizer(corpus=tokenized_corpus_test, model=w2v_model_test,
+                                            num_features=feature_size)
+x_train_w2v = pandas.DataFrame(w2v_feature_array_train)
+x_test_w2v = pandas.DataFrame(w2v_feature_array_test)
+
+#%%
+x_train_w2v.head()
+
+#%%
+x_test_w2v.head()
+
 
 # %% [markdown]
 # ## Perform SVM as a baseline model and evaluate it.
@@ -514,6 +528,12 @@ run_svm(x_train_tfidf_ngram, y_train, x_test_tfidf_ngram, 'TF/IDF N-Grams')
 
 #%%
 run_svm(x_train_tfidf_char, y_train, x_test_cv_char, 'TF/IDF Chars')
+
+#%%
+run_svm(x_train_tfidf_char, y_train, x_test_cv_char, 'TF/IDF Chars')
+
+#%%
+run_svm(x_train_w2v, y_train, x_test_w2v, 'Word2Vec')
 
 #%%
 #===================================<experimental code below>===================================
