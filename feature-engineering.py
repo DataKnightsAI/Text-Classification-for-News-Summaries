@@ -231,7 +231,7 @@ x_train_tfidf_unigram.head()
 tfidf_vect = TfidfVectorizer(sublinear_tf = True, min_df = 2, ngram_range = (2, 3), 
                              use_idf = True, token_pattern=r'\b[A-Za-z]{2,}\b')
 x_train_tfidf_ngram = tfidf_vect.fit_transform(x_train).toarray()
-x_test_tfidf_ngram = tfidf_vect.fit_transform(x_test).toarray()
+x_test_tfidf_ngram = tfidf_vect.transform(x_test).toarray()
 # get all unique words in the corpus
 vocab = tfidf_vect.get_feature_names()
 
@@ -453,43 +453,67 @@ word_freq_df.head(20)
 # %%
 top_words_df.head(20)
 
+#%% [markdown]
+# ## Run SVM and Plot the results
+
 # %%
 # Run classifier
-classifier = OneVsRestClassifier(svm.LinearSVC(random_state=1))
-classifier.fit(x_train_bagofwords, y_train)
-y_score = classifier.decision_function(x_test_bagofwords)
+def run_svm(x_train, y_train, x_test, emb):
+    str(emb)
+    classifier = OneVsRestClassifier(svm.LinearSVC(random_state=1))
+    classifier.fit(x_train, y_train)
+    y_score = classifier.decision_function(x_test)
 
-# %%
-# The average precision score in multi-label settings
-# For each class
-precision = dict()
-recall = dict()
-average_precision = dict()
-for i in range(n_classes):
-    precision[i], recall[i], _ = precision_recall_curve(y_test[:, i],
-                                                        y_score[:, i])
-    average_precision[i] = average_precision_score(y_test[:, i], y_score[:, i])
 
-# A "micro-average": quantifying score on all classes jointly
-precision["micro"], recall["micro"], _ = precision_recall_curve(y_test.ravel(),
-    y_score.ravel())
-average_precision["micro"] = average_precision_score(y_test, y_score,
-                                                     average="micro")
-print('Average precision score, micro-averaged over all classes: {0:0.2f}'
-      .format(average_precision["micro"]))
+    # The average precision score in multi-label settings
+    # For each class
+    precision = dict()
+    recall = dict()
+    average_precision = dict()
+    for i in range(n_classes):
+        precision[i], recall[i], _ = precision_recall_curve(y_test[:, i],
+                                                            y_score[:, i])
+        average_precision[i] = average_precision_score(y_test[:, i], y_score[:, i])
 
-# %%
-# Plot the micro-averaged Precision-Recall curve
-plt.figure()
-plt.step(recall['micro'], precision['micro'], where='post')
+    # A "micro-average": quantifying score on all classes jointly
+    precision["micro"], recall["micro"], _ = precision_recall_curve(y_test.ravel(),
+        y_score.ravel())
+    average_precision["micro"] = average_precision_score(y_test, y_score,
+                                                        average="micro")
+    print(emb)
+    print('Average precision score, micro-averaged over all classes: {0:0.2f}'
+        .format(average_precision["micro"]))
 
-plt.xlabel('Recall')
-plt.ylabel('Precision')
-plt.ylim([0.0, 1.05])
-plt.xlim([0.0, 1.0])
-plt.title(
-    'Average precision score, micro-averaged over all classes: AP={0:0.2f}'
-    .format(average_precision["micro"]))
+
+    # Plot the micro-averaged Precision-Recall curve
+    plt.figure()
+    plt.step(recall['micro'], precision['micro'], where='post')
+
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.ylim([0.0, 1.05])
+    plt.xlim([0.0, 1.0])
+    plt.title(
+        'Average precision score for, micro-averaged over all classes: AP={0:0.2f}'
+        .format(average_precision["micro"]))
+
+#%%
+run_svm(x_train_bagofwords, y_train, x_test_bagofwords, 'Bag of Words')
+
+#%%
+run_svm(x_train_bagofngrams, y_train, x_test_bagofngrams, 'Bag of N-Grams')
+
+#%%
+run_svm(x_train_cv_char, y_train, x_test_cv_char, 'Bag of Chars')
+
+#%%
+run_svm(x_train_tfidf_unigram, y_train, x_test_tfidf_unigram, 'TF/IDF Unigram')
+
+#%%
+run_svm(x_train_tfidf_ngram, y_train, x_test_tfidf_ngram, 'TF/IDF N-Grams')
+
+#%%
+run_svm(x_train_tfidf_char, y_train, x_test_cv_char, 'TF/IDF Chars')
 
 #%%
 #===================================<experimental code below>===================================
