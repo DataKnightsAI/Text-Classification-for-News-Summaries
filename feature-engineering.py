@@ -213,13 +213,13 @@ words_barchart(x_train_bagofngrams, ngram_vocab)
 # %% Bar chart of Character grams frequency
 words_barchart(x_train_cv_char, cv_char_vocab)
 
-#%% Bar chart of Bag of Words frequency
+#%% Bar chart of Bag of Words frequency for 90th percentile
 words_barchart(x_train_bagofwords_10p, bow_vocab_10p)
 
-# %% Bar chart of N-Grams frequency
+# %% Bar chart of N-Grams frequency for 90th percentile
 words_barchart(x_train_bagofngrams_10p, ngram_vocab_10p)
 
-# %% Bar chart of Character grams frequency
+# %% Bar chart of Character grams frequency for 90th percentile
 words_barchart(x_train_cv_char_10p, cv_char_vocab_10p)
 
 # %% [markdown]
@@ -491,7 +491,7 @@ top_words_df.head(20)
 # ## Run SVM and Plot the results
 
 # %%
-# Run classifier
+# SVM classifier and plot superfunction
 def run_svm(x_train, y_train, x_test, emb):
     str(emb)
     classifier = OneVsRestClassifier(svm.LinearSVC(random_state=1))
@@ -568,34 +568,47 @@ def run_svm(x_train, y_train, x_test, emb):
 
     plt.show()
 
-#%%
+#%% [markdown]
+# ### SVM for Bag of Words
 run_svm(x_train_bagofwords, y_train, x_test_bagofwords, 'Bag of Words')
 
-#%%
+#%% [markdown]
+# ### SVM for Bag of N-grams
 run_svm(x_train_bagofngrams, y_train, x_test_bagofngrams, 'Bag of N-Grams')
 
-#%%
+#%% [markdown]
+# ### SVM for Bag of Chars
 run_svm(x_train_cv_char, y_train, x_test_cv_char, 'Bag of Chars')
 
-#%%
+#%% [markdown]
+# ### SVM for TF/IDF Unigram
 run_svm(x_train_tfidf_unigram, y_train, x_test_tfidf_unigram, 'TF/IDF Unigram')
 
-#%%
+#%% [markdown]
+# ### SVM for TF/IDF N-grams
 run_svm(x_train_tfidf_ngram, y_train, x_test_tfidf_ngram, 'TF/IDF N-Grams')
 
-#%%
+#%% [markdown]
+# ### SVM for TF/IDF Chars
 run_svm(x_train_tfidf_char, y_train, x_test_cv_char, 'TF/IDF Chars')
 
-#%%
+#%% [markdown]
+# ### SVM for Word2Vec
 run_svm(x_train_w2v, y_train, x_test_w2v, 'Word2Vec')
 
-#%%
+#%% [markdown]
+# ## Let's explore also the SVM performance on 90th percentile feature selection
+
+#%% [markdown]
+# ### SVM for Bag of Words 90th percentile
 run_svm(x_train_bagofwords_10p, y_train, x_test_bagofwords_10p, 'Bag of Words - 90th percentile')
 
-#%%
+#%% [markdown]
+# ### SVM for Bag of N-grams 90th percentile
 run_svm(x_train_bagofngrams_10p, y_train, x_test_bagofngrams_10p, 'Bag of N-Grams - 90th percentile')
 
-#%%
+#%% [markdown]
+# ### SVM for Bag of Chars 90th percentile
 run_svm(x_train_cv_char_10p, y_train, x_test_cv_char_10p, 'Bag of Chars - 90th percentile')
 
 #%%
