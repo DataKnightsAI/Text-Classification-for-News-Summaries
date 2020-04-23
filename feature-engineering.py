@@ -83,6 +83,33 @@ x_test = test_data_sample.content_cleaned
 y_test = label_binarize(test_data_sample.category, classes=[1, 2, 3, 4])
 
 # %% [markdown]
+# ## Prepare for f_classif to try different percentiles
+
+#%%
+# Constant variable to hold the percentiles we need
+PERCENTILE_LIST = [10, 25, 50, 75]
+
+# Function to apply f_classif on various tokenizers
+# df is the dataframe to apply the selector to
+# vect is the variable holding countvectorizer or tfidfvectorizer etc.
+# perc is the percentile desired
+
+def sel_percentile (df, vect, voc, perc):
+    token_dict = {}
+    df_dict = {}
+    for p in perc:
+        selector = SelectPercentile(f_classif, percentile=p)
+        selector.fit(vect, df)
+        token_dict[p] = selector.transform(vect).toarray()
+
+        columns = numpy.asarray(voc)
+        support = numpy.asarray(selector.get_support())
+        vocab = columns[support]
+    
+        df_dict[p] = pandas.DataFrame(token_dict[p], columns=vocab)
+    return df_dict
+
+# %% [markdown]
 # ### Let's make a Bag of Words
 # %%
 # Use countvectorizer to get a vector of words
@@ -91,30 +118,30 @@ cv = CountVectorizer(min_df = 2, lowercase = True,
 x_train_cv = cv.fit_transform(x_train)
 x_test_cv = cv.transform(x_test)
 
-selector = SelectPercentile(f_classif, percentile=10)
-selector.fit(x_train_cv, train_data_sample.category)
-x_train_cv_10p = selector.transform(x_train_cv).toarray()
-x_test_cv_10p = selector.transform(x_test_cv).toarray()
+# selector = SelectPercentile(f_classif, percentile=10)
+# selector.fit(x_train_cv, train_data_sample.category)
+# x_train_cv_10p = selector.transform(x_train_cv).toarray()
+# x_test_cv_10p = selector.transform(x_test_cv).toarray()
 
 # get all unique words in the corpus
 bow_vocab = cv.get_feature_names()
 
-columns = numpy.asarray(bow_vocab)
-support = numpy.asarray(selector.get_support())
-bow_vocab_10p = columns[support]
-
-x_train_cv = x_train_cv.toarray()
-x_test_cv = x_test_cv.toarray()
+# columns = numpy.asarray(bow_vocab)
+# support = numpy.asarray(selector.get_support())
+# bow_vocab_10p = columns[support]
 
 # produce a dataframe including the feature names
-x_train_bagofwords = pandas.DataFrame(x_train_cv, columns=bow_vocab)
-x_test_bagofwords = pandas.DataFrame(x_test_cv, columns=bow_vocab)
-x_train_bagofwords_10p = pandas.DataFrame(x_train_cv_10p, columns=bow_vocab_10p)
-x_test_bagofwords_10p = pandas.DataFrame(x_test_cv_10p, columns=bow_vocab_10p)
+x_train_bagofwords = pandas.DataFrame(x_train_cv.toarray(), columns=bow_vocab)
+x_test_bagofwords = pandas.DataFrame(x_test_cv.toarray(), columns=bow_vocab)
+# x_train_bagofwords_10p = pandas.DataFrame(x_train_cv_10p, columns=bow_vocab_10p)
+# x_test_bagofwords_10p = pandas.DataFrame(x_test_cv_10p, columns=bow_vocab_10p)
+x_train_bagofwords_p = sel_percentile(train_data_sample.category, x_train_cv, bow_vocab, PERCENTILE_LIST)
+x_test_bagofwords_p = sel_percentile(test_data_sample.category, x_test_cv, bow_vocab, PERCENTILE_LIST)
 x_train_bagofwords.head()
 
 #%%
-x_test_bagofwords_10p.head()
+# see the different by percentile feature selected versions of BOW
+x_train_bagofwords_p[75]
 
 # %% [markdown]
 # ### We have bag of words already, let's make a Bag of N-Grams
@@ -214,7 +241,7 @@ words_barchart(x_train_bagofngrams, ngram_vocab)
 words_barchart(x_train_cv_char, cv_char_vocab)
 
 #%% Bar chart of Bag of Words frequency for 90th percentile
-words_barchart(x_train_bagofwords_10p, bow_vocab_10p)
+words_barchart(x_train_bagofwords_p[10], x_train_bagofwords_p[10].columns.values)
 
 # %% Bar chart of N-Grams frequency for 90th percentile
 words_barchart(x_train_bagofngrams_10p, ngram_vocab_10p)
@@ -412,17 +439,17 @@ w2v_model_test = word2vec.Word2Vec(tokenized_corpus_test, size=feature_size,
 # ### Visualize Word Embedding
 
 # %%
-# from sklearn.manifold import TSNE
-# words = w2v_model.wv.index2word
-# wvs = w2v_model.wv[words]
-# tsne = TSNE(n_components=2, random_state=0, n_iter=500, perplexity=2)
-# numpy.set_printoptions(suppress=True)
-# T = tsne.fit_transform(wvs)
-# labels = words
-# plt.figure(figsize=(12, 6))
-# plt.scatter(T[:, 0], T[:, 1], c='orange', edgecolors='r')
-# for label, x, y in zip(labels, T[:, 0], T[:, 1]):
-#  plt.annotate(label, xy=(x+1, y+1), xytext=(0, 0), textcoords='offset points')
+from sklearn.manifold import TSNE
+words = w2v_model_train.wv.index2word
+wvs = w2v_model_train.wv[words]
+tsne = TSNE(n_components=2, random_state=0, n_iter=500, perplexity=2)
+numpy.set_printoptions(suppress=True)
+T = tsne.fit_transform(wvs)
+labels = words
+plt.figure(figsize=(12, 6))
+plt.scatter(T[:, 0], T[:, 1], c='orange', edgecolors='r')
+for label, x, y in zip(labels, T[:, 0], T[:, 1]):
+ plt.annotate(label, xy=(x+1, y+1), xytext=(0, 0), textcoords='offset points')
 
 # %% [markdown]
 # ### Functions to get document level embeddings
@@ -461,12 +488,6 @@ w2v_feature_array_test = averaged_word_vectorizer(corpus=tokenized_corpus_test, 
                                             num_features=feature_size)
 x_train_w2v = pandas.DataFrame(w2v_feature_array_train)
 x_test_w2v = pandas.DataFrame(w2v_feature_array_test)
-
-#%%
-x_train_w2v.head()
-
-#%%
-x_test_w2v.head()
 
 
 # %% [markdown]
@@ -601,7 +622,7 @@ run_svm(x_train_w2v, y_train, x_test_w2v, 'Word2Vec')
 
 #%% [markdown]
 # ### SVM for Bag of Words 90th percentile
-run_svm(x_train_bagofwords_10p, y_train, x_test_bagofwords_10p, 'Bag of Words - 90th percentile')
+run_svm(x_train_bagofwords_p[10], y_train, x_test_bagofwords_p[10], 'Bag of Words - 90th percentile')
 
 #%% [markdown]
 # ### SVM for Bag of N-grams 90th percentile
