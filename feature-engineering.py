@@ -118,29 +118,25 @@ cv = CountVectorizer(min_df = 2, lowercase = True,
 x_train_cv = cv.fit_transform(x_train)
 x_test_cv = cv.transform(x_test)
 
-# selector = SelectPercentile(f_classif, percentile=10)
-# selector.fit(x_train_cv, train_data_sample.category)
-# x_train_cv_10p = selector.transform(x_train_cv).toarray()
-# x_test_cv_10p = selector.transform(x_test_cv).toarray()
-
 # get all unique words in the corpus
 bow_vocab = cv.get_feature_names()
-
-# columns = numpy.asarray(bow_vocab)
-# support = numpy.asarray(selector.get_support())
-# bow_vocab_10p = columns[support]
 
 # produce a dataframe including the feature names
 x_train_bagofwords = pandas.DataFrame(x_train_cv.toarray(), columns=bow_vocab)
 x_test_bagofwords = pandas.DataFrame(x_test_cv.toarray(), columns=bow_vocab)
-# x_train_bagofwords_10p = pandas.DataFrame(x_train_cv_10p, columns=bow_vocab_10p)
-# x_test_bagofwords_10p = pandas.DataFrame(x_test_cv_10p, columns=bow_vocab_10p)
+
 x_train_bagofwords_p = sel_percentile(train_data_sample.category, x_train_cv, bow_vocab, PERCENTILE_LIST)
 x_test_bagofwords_p = sel_percentile(test_data_sample.category, x_test_cv, bow_vocab, PERCENTILE_LIST)
 x_train_bagofwords.head()
 
 #%%
 # see the different by percentile feature selected versions of BOW
+x_train_bagofwords_p[10]
+#%% 
+x_train_bagofwords_p[25]
+#%% 
+x_train_bagofwords_p[50]
+#%% 
 x_train_bagofwords_p[75]
 
 # %% [markdown]
@@ -155,24 +151,22 @@ x_test_cv = cv.transform(x_test)
 # get all unique words in the corpus
 ngram_vocab = cv.get_feature_names()
 
-selector = SelectPercentile(f_classif, percentile=10)
-selector.fit(x_train_cv, train_data_sample.category)
-x_train_cv_10p = selector.transform(x_train_cv).toarray()
-x_test_cv_10p = selector.transform(x_test_cv).toarray()
-
-columns = numpy.asarray(ngram_vocab)
-support = numpy.asarray(selector.get_support())
-ngram_vocab_10p = columns[support]
-
-x_train_cv = x_train_cv.toarray()
-x_test_cv = x_test_cv.toarray()
-
 # produce a dataframe including the feature names
-x_train_bagofngrams = pandas.DataFrame(x_train_cv, columns=ngram_vocab)
-x_test_bagofngrams = pandas.DataFrame(x_test_cv, columns=ngram_vocab)
-x_train_bagofngrams_10p = pandas.DataFrame(x_train_cv_10p, columns=ngram_vocab_10p)
-x_test_bagofngrams_10p = pandas.DataFrame(x_test_cv_10p, columns=ngram_vocab_10p)
+x_train_bagofngrams = pandas.DataFrame(x_train_cv.toarray(), columns=ngram_vocab)
+x_test_bagofngrams = pandas.DataFrame(x_test_cv.toarray(), columns=ngram_vocab)
+x_train_bagofngrams_p = sel_percentile(train_data_sample.category, x_train_cv, ngram_vocab, PERCENTILE_LIST)
+x_test_bagofngrams_p = sel_percentile(test_data_sample.category, x_test_cv, ngram_vocab, PERCENTILE_LIST)
+
 x_train_bagofngrams.head()
+#%%
+# see the different by percentile feature selected versions of BOW
+x_train_bagofngrams_p[10]
+#%% 
+x_train_bagofngrams_p[25]
+#%% 
+x_train_bagofngrams_p[50]
+#%% 
+x_train_bagofngrams_p[75]
 
 # %% 
 # Use countvectorizer to get a vector of chars
@@ -184,24 +178,22 @@ x_test_cv = cv.transform(x_test)
 # get all unique words in the corpus
 cv_char_vocab = cv.get_feature_names()
 
-selector = SelectPercentile(f_classif, percentile=10)
-selector.fit(x_train_cv, train_data_sample.category)
-x_train_cv_10p = selector.transform(x_train_cv).toarray()
-x_test_cv_10p = selector.transform(x_test_cv).toarray()
-
-columns = numpy.asarray(cv_char_vocab)
-support = numpy.asarray(selector.get_support())
-cv_char_vocab_10p = columns[support]
-
-x_train_cv = x_train_cv.toarray()
-x_test_cv = x_test_cv.toarray()
-
 # produce a dataframe including the feature names
-x_train_cv_char = pandas.DataFrame(x_train_cv, columns = cv_char_vocab)
-x_test_cv_char = pandas.DataFrame(x_test_cv, columns=cv_char_vocab)
-x_train_cv_char_10p = pandas.DataFrame(x_train_cv_10p, columns = cv_char_vocab_10p)
-x_test_cv_char_10p = pandas.DataFrame(x_test_cv_10p, columns=cv_char_vocab_10p)
+x_train_cv_char = pandas.DataFrame(x_train_cv.toarray(), columns = cv_char_vocab)
+x_test_cv_char = pandas.DataFrame(x_test_cv.toarray(), columns=cv_char_vocab)
+x_train_cv_char_p = sel_percentile(train_data_sample.category, x_train_cv, cv_char_vocab, PERCENTILE_LIST)
+x_test_cv_char_p = sel_percentile(test_data_sample.category, x_test_cv, cv_char_vocab, PERCENTILE_LIST)
+
 x_train_cv_char.head()
+#%%
+# see the different by percentile feature selected versions of BOW
+x_train_cv_char_p[10]
+#%% 
+x_train_cv_char_p[25]
+#%% 
+x_train_cv_char_p[50]
+#%% 
+x_train_cv_char_p[75]
 
 # %% [markdown]
 # ### Let's explore the data we got through plots and tables
@@ -244,10 +236,10 @@ words_barchart(x_train_cv_char, cv_char_vocab)
 words_barchart(x_train_bagofwords_p[10], x_train_bagofwords_p[10].columns.values)
 
 # %% Bar chart of N-Grams frequency for 90th percentile
-words_barchart(x_train_bagofngrams_10p, ngram_vocab_10p)
+words_barchart(x_train_bagofngrams_p[10], x_train_bagofngrams_p[10].columns.values)
 
 # %% Bar chart of Character grams frequency for 90th percentile
-words_barchart(x_train_cv_char_10p, cv_char_vocab_10p)
+words_barchart(x_train_cv_char_p[10], x_train_cv_char_p[10].columns.values)
 
 # %% [markdown]
 # ## TF/IDF
@@ -260,16 +252,32 @@ words_barchart(x_train_cv_char_10p, cv_char_vocab_10p)
 # Use TF/IDF vectorizer to get a vector of unigrams
 tfidf_vect = TfidfVectorizer(sublinear_tf = True, min_df = 2, ngram_range = (1, 1), 
                              use_idf = True, token_pattern=r'\b[A-Za-z]{2,}\b')
-x_train_tfidf_unigram = tfidf_vect.fit_transform(x_train).toarray()
-x_test_tfidf_unigram = tfidf_vect.transform(x_test).toarray()
+x_train_tfidf = tfidf_vect.fit_transform(x_train)
+x_test_tfidf = tfidf_vect.transform(x_test)
 
 # get all unique words in the corpus
 vocab = tfidf_vect.get_feature_names()
 
+x_train_tfidf = numpy.round(x_train_tfidf, 2)
+x_test_tfidf = numpy.round(x_test_tfidf, 2)
+
 # produce a dataframe including the feature names
-x_train_tfidf_unigram = pandas.DataFrame(numpy.round(x_train_tfidf_unigram, 2), columns = vocab)
-x_test_tfidf_unigram = pandas.DataFrame(numpy.round(x_test_tfidf_unigram, 2), columns = vocab)
+x_train_tfidf_unigram = pandas.DataFrame(x_train_tfidf.toarray(), columns = vocab)
+x_test_tfidf_unigram = pandas.DataFrame(x_test_tfidf.toarray(), columns = vocab)
+x_train_tfidf_unigram_p = sel_percentile(train_data_sample.category, x_train_tfidf, vocab, PERCENTILE_LIST)
+x_test_tfidf_unigram_p = sel_percentile(test_data_sample.category, x_test_tfidf, vocab, PERCENTILE_LIST)
+
 x_train_tfidf_unigram.head()
+
+#%%
+# see the different by percentile feature selected versions of BOW
+x_train_tfidf_unigram_p[10]
+#%% 
+x_train_tfidf_unigram_p[25]
+#%% 
+x_train_tfidf_unigram_p[50]
+#%% 
+x_train_tfidf_unigram_p[75]
 
 # %% [markdown]
 # ### N-Gram TF/IDF
@@ -277,16 +285,32 @@ x_train_tfidf_unigram.head()
 # Use TF/IDF vectorizer to get a vector of n-grams
 tfidf_vect = TfidfVectorizer(sublinear_tf = True, min_df = 2, ngram_range = (2, 3), 
                              use_idf = True, token_pattern=r'\b[A-Za-z]{2,}\b')
-x_train_tfidf_ngram = tfidf_vect.fit_transform(x_train).toarray()
-x_test_tfidf_ngram = tfidf_vect.transform(x_test).toarray()
+x_train_tfidf = tfidf_vect.fit_transform(x_train)
+x_test_tfidf = tfidf_vect.transform(x_test)
+
 # get all unique words in the corpus
 vocab = tfidf_vect.get_feature_names()
 
+x_train_tfidf = numpy.round(x_train_tfidf, 2)
+x_test_tfidf = numpy.round(x_test_tfidf, 2)
+
 # produce a dataframe including the feature names
-x_train_tfidf_ngram = pandas.DataFrame(numpy.round(x_train_tfidf_ngram, 2), columns = vocab)
-x_test_tfidf_ngram = pandas.DataFrame(numpy.round(x_test_tfidf_ngram, 2), columns = vocab)
+x_train_tfidf_ngram = pandas.DataFrame(x_train_tfidf.toarray(), columns = vocab)
+x_test_tfidf_ngram = pandas.DataFrame(x_test_tfidf.toarray(), columns = vocab)
+x_train_tfidf_ngram_p = sel_percentile(train_data_sample.category, x_train_tfidf, vocab, PERCENTILE_LIST)
+x_test_tfidf_ngram_p = sel_percentile(test_data_sample.category, x_test_tfidf, vocab, PERCENTILE_LIST)
+
 x_train_tfidf_ngram.head()
 
+#%%
+# see the different by percentile feature selected versions of TF-IDF N-grams
+x_train_tfidf_ngram_p[10]
+#%% 
+x_train_tfidf_ngram_p[25]
+#%% 
+x_train_tfidf_ngram_p[50]
+#%% 
+x_train_tfidf_ngram_p[75]
 # %% [markdown]
 # ### Character TF/IDF
 
@@ -294,17 +318,31 @@ x_train_tfidf_ngram.head()
 tfidf_vect = TfidfVectorizer(analyzer = 'char', sublinear_tf = True, min_df = 2, 
                              ngram_range = (2, 3), use_idf = True, 
                              token_pattern=r'\b[A-Za-z]{2,}\b')
-x_train_tfidf_char = tfidf_vect.fit_transform(x_train).toarray()
-x_test_tfidf_char = tfidf_vect.transform(x_test).toarray()
+x_train_tfidf = tfidf_vect.fit_transform(x_train)
+x_test_tfidf = tfidf_vect.transform(x_test)
 
 # get all unique words in the corpus
 char_vocab = tfidf_vect.get_feature_names()
 
-# produce a dataframe including the feature names
-x_train_tfidf_char = pandas.DataFrame(numpy.round(x_train_tfidf_char, 2), columns = char_vocab)
-x_test_tfidf_char = pandas.DataFrame(numpy.round(x_test_tfidf_char, 2), columns = char_vocab)
-x_train_tfidf_char.head()
+x_train_tfidf = numpy.round(x_train_tfidf, 2)
+x_test_tfidf = numpy.round(x_test_tfidf, 2)
 
+# produce a dataframe including the feature names
+x_train_tfidf_char = pandas.DataFrame(x_train_tfidf.toarray(), columns = char_vocab)
+x_test_tfidf_char = pandas.DataFrame(x_test_tfidf.toarray(), columns = char_vocab)
+x_train_tfidf_char_p = sel_percentile(train_data_sample.category, x_train_tfidf, char_vocab, PERCENTILE_LIST)
+x_test_tfidf_char_p = sel_percentile(test_data_sample.category, x_test_tfidf, char_vocab, PERCENTILE_LIST)
+
+x_train_tfidf_char.head()
+#%%
+# see the different by percentile feature selected versions of TF-IDF chars
+x_train_tfidf_char_p[10]
+#%% 
+x_train_tfidf_char_p[25]
+#%% 
+x_train_tfidf_char_p[50]
+#%% 
+x_train_tfidf_char_p[75]
 
 # %% [markdown]
 # ## Document Similarity
@@ -519,7 +557,6 @@ def run_svm(x_train, y_train, x_test, emb):
     classifier.fit(x_train, y_train)
     y_score = classifier.decision_function(x_test)
 
-
     # The average precision score in multi-label settings
     # For each class
     precision = dict()
@@ -620,9 +657,17 @@ run_svm(x_train_w2v, y_train, x_test_w2v, 'Word2Vec')
 #%% [markdown]
 # ## Let's explore also the SVM performance on 90th percentile feature selection
 
+#%%
+t = x_train_bagofwords_p[10]
+
+#%%
+v = x_test_bagofwords_p[10]
+
 #%% [markdown]
 # ### SVM for Bag of Words 90th percentile
-run_svm(x_train_bagofwords_p[10], y_train, x_test_bagofwords_p[10], 'Bag of Words - 90th percentile')
+for p in PERCENTILE_LIST:
+    perc = 100 - p
+    run_svm(x_train_bagofwords_p[p], y_train, x_test_bagofwords_p[p], f'Bag of Words - {perc}th percentile')
 
 #%% [markdown]
 # ### SVM for Bag of N-grams 90th percentile
