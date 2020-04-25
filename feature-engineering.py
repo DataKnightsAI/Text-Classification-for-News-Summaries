@@ -94,20 +94,23 @@ PERCENTILE_LIST = [10, 25, 50, 75]
 # vect is the variable holding countvectorizer or tfidfvectorizer etc.
 # perc is the percentile desired
 
-def sel_percentile (df, vect, voc, perc):
+def sel_percentile (df, df2, vect, vect2, voc, perc):
     token_dict = {}
+    token_dict2 = {}
     df_dict = {}
+    df_dict2 = {}
     for p in perc:
-        selector = SelectPercentile(f_classif, percentile=p)
-        selector.fit(vect, df)
-        token_dict[p] = selector.transform(vect).toarray()
-
+        selector = SelectPercentile(f_classif, percentile = p)
+        #selector.fit(vect, df)
+        token_dict[p] = selector.fit_transform(vect, df).toarray()
+        token_dict2[p] = selector.transform(vect2).toarray()
         columns = numpy.asarray(voc)
         support = numpy.asarray(selector.get_support())
         vocab = columns[support]
     
         df_dict[p] = pandas.DataFrame(token_dict[p], columns=vocab)
-    return df_dict
+        df_dict2[p] = pandas.DataFrame(token_dict2[p], columns=vocab)
+    return df_dict, df_dict2
 
 # %% [markdown]
 # ### Let's make a Bag of Words
@@ -125,8 +128,10 @@ bow_vocab = cv.get_feature_names()
 x_train_bagofwords = pandas.DataFrame(x_train_cv.toarray(), columns=bow_vocab)
 x_test_bagofwords = pandas.DataFrame(x_test_cv.toarray(), columns=bow_vocab)
 
-x_train_bagofwords_p = sel_percentile(train_data_sample.category, x_train_cv, bow_vocab, PERCENTILE_LIST)
-x_test_bagofwords_p = sel_percentile(test_data_sample.category, x_test_cv, bow_vocab, PERCENTILE_LIST)
+x_train_bagofwords_p, x_test_bagofwords_p = sel_percentile(train_data_sample.category,
+    test_data_sample.category, x_train_cv, x_test_cv, bow_vocab, PERCENTILE_LIST)
+# x_train_bagofwords_p = sel_percentile(train_data_sample.category, x_train_cv, bow_vocab, PERCENTILE_LIST)
+# x_test_bagofwords_p = sel_percentile(test_data_sample.category, x_test_cv, bow_vocab, PERCENTILE_LIST)
 x_train_bagofwords.head()
 
 #%%
@@ -137,7 +142,17 @@ x_train_bagofwords_p[25]
 #%% 
 x_train_bagofwords_p[50]
 #%% 
-x_train_bagofwords_p[75]
+x_test_bagofwords_p[75]
+
+#%%
+# see the different by percentile feature selected versions of BOW
+x_test_bagofwords_p[10]
+#%% 
+x_test_bagofwords_p[25]
+#%% 
+x_test_bagofwords_p[50]
+#%% 
+x_test_bagofwords_p[75]
 
 # %% [markdown]
 # ### We have bag of words already, let's make a Bag of N-Grams
@@ -469,9 +484,9 @@ sample = 1e-3   # Downsample setting for frequent words
 w2v_model_train = word2vec.Word2Vec(tokenized_corpus_train, size=feature_size, 
                           window=window_context, min_count=min_word_count,
                           sample=sample, iter=50)
-w2v_model_test = word2vec.Word2Vec(tokenized_corpus_test, size=feature_size, 
-                          window=window_context, min_count=min_word_count,
-                          sample=sample, iter=50)
+# w2v_model_test = word2vec.Word2Vec(tokenized_corpus_test, size=feature_size, 
+#                           window=window_context, min_count=min_word_count,
+#                           sample=sample, iter=50)
 
 # %% [markdown]
 # ### Visualize Word Embedding
@@ -509,7 +524,6 @@ def average_word_vectors(words, model, vocabulary, num_features):
 
  return feature_vector
 
-
 def averaged_word_vectorizer(corpus, model, num_features):
  vocabulary = set(model.wv.index2word)
  features = [average_word_vectors(tokenized_sentence, model, vocabulary, num_features)
@@ -522,7 +536,7 @@ def averaged_word_vectorizer(corpus, model, num_features):
 # %%
 w2v_feature_array_train = averaged_word_vectorizer(corpus=tokenized_corpus_train, model=w2v_model_train,
                                             num_features=feature_size)
-w2v_feature_array_test = averaged_word_vectorizer(corpus=tokenized_corpus_test, model=w2v_model_test,
+w2v_feature_array_test = averaged_word_vectorizer(corpus=tokenized_corpus_test, model=w2v_model_train,
                                             num_features=feature_size)
 x_train_w2v = pandas.DataFrame(w2v_feature_array_train)
 x_test_w2v = pandas.DataFrame(w2v_feature_array_test)
