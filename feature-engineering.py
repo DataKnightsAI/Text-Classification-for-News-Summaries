@@ -101,7 +101,7 @@ def sel_percentile (df, df2, vect, vect2, voc, perc):
     df_dict2 = {}
     for p in perc:
         selector = SelectPercentile(f_classif, percentile = p)
-        #selector.fit(vect, df)
+        # old just train: selector.fit(vect, df) || instead both train and test created
         token_dict[p] = selector.fit_transform(vect, df).toarray()
         token_dict2[p] = selector.transform(vect2).toarray()
         columns = numpy.asarray(voc)
@@ -169,8 +169,10 @@ ngram_vocab = cv.get_feature_names()
 # produce a dataframe including the feature names
 x_train_bagofngrams = pandas.DataFrame(x_train_cv.toarray(), columns=ngram_vocab)
 x_test_bagofngrams = pandas.DataFrame(x_test_cv.toarray(), columns=ngram_vocab)
-x_train_bagofngrams_p = sel_percentile(train_data_sample.category, x_train_cv, ngram_vocab, PERCENTILE_LIST)
-x_test_bagofngrams_p = sel_percentile(test_data_sample.category, x_test_cv, ngram_vocab, PERCENTILE_LIST)
+x_train_bagofngrams_p, x_test_bagofngrams_p = sel_percentile(train_data_sample.category,
+    test_data_sample.category, x_train_cv, x_test_cv, ngram_vocab, PERCENTILE_LIST)
+# x_train_bagofngrams_p = sel_percentile(train_data_sample.category, x_train_cv, ngram_vocab, PERCENTILE_LIST)
+# x_test_bagofngrams_p = sel_percentile(test_data_sample.category, x_test_cv, ngram_vocab, PERCENTILE_LIST)
 
 x_train_bagofngrams.head()
 #%%
@@ -196,8 +198,10 @@ cv_char_vocab = cv.get_feature_names()
 # produce a dataframe including the feature names
 x_train_cv_char = pandas.DataFrame(x_train_cv.toarray(), columns = cv_char_vocab)
 x_test_cv_char = pandas.DataFrame(x_test_cv.toarray(), columns=cv_char_vocab)
-x_train_cv_char_p = sel_percentile(train_data_sample.category, x_train_cv, cv_char_vocab, PERCENTILE_LIST)
-x_test_cv_char_p = sel_percentile(test_data_sample.category, x_test_cv, cv_char_vocab, PERCENTILE_LIST)
+x_train_cv_char_p, x_test_cv_char_p = sel_percentile(train_data_sample.category,
+    test_data_sample.category, x_train_cv, x_test_cv, cv_char_vocab, PERCENTILE_LIST)
+# x_train_cv_char_p = sel_percentile(train_data_sample.category, x_train_cv, cv_char_vocab, PERCENTILE_LIST)
+# x_test_cv_char_p = sel_percentile(test_data_sample.category, x_test_cv, cv_char_vocab, PERCENTILE_LIST)
 
 x_train_cv_char.head()
 #%%
@@ -279,8 +283,10 @@ x_test_tfidf = numpy.round(x_test_tfidf, 2)
 # produce a dataframe including the feature names
 x_train_tfidf_unigram = pandas.DataFrame(x_train_tfidf.toarray(), columns = vocab)
 x_test_tfidf_unigram = pandas.DataFrame(x_test_tfidf.toarray(), columns = vocab)
-x_train_tfidf_unigram_p = sel_percentile(train_data_sample.category, x_train_tfidf, vocab, PERCENTILE_LIST)
-x_test_tfidf_unigram_p = sel_percentile(test_data_sample.category, x_test_tfidf, vocab, PERCENTILE_LIST)
+x_train_tfidf_unigram_p, x_test_tfidf_unigram_p = sel_percentile(train_data_sample.category,
+    test_data_sample.category, x_train_tfidf, x_test_tfidf, vocab, PERCENTILE_LIST)
+# x_train_tfidf_unigram_p = sel_percentile(train_data_sample.category, x_train_tfidf, vocab, PERCENTILE_LIST)
+# x_test_tfidf_unigram_p = sel_percentile(test_data_sample.category, x_test_tfidf, vocab, PERCENTILE_LIST)
 
 x_train_tfidf_unigram.head()
 
@@ -312,8 +318,10 @@ x_test_tfidf = numpy.round(x_test_tfidf, 2)
 # produce a dataframe including the feature names
 x_train_tfidf_ngram = pandas.DataFrame(x_train_tfidf.toarray(), columns = vocab)
 x_test_tfidf_ngram = pandas.DataFrame(x_test_tfidf.toarray(), columns = vocab)
-x_train_tfidf_ngram_p = sel_percentile(train_data_sample.category, x_train_tfidf, vocab, PERCENTILE_LIST)
-x_test_tfidf_ngram_p = sel_percentile(test_data_sample.category, x_test_tfidf, vocab, PERCENTILE_LIST)
+x_train_tfidf_ngram_p, x_test_tfidf_ngram_p = sel_percentile(train_data_sample.category,
+    test_data_sample.category, x_train_tfidf, x_test_tfidf, vocab, PERCENTILE_LIST)
+# x_train_tfidf_ngram_p = sel_percentile(train_data_sample.category, x_train_tfidf, vocab, PERCENTILE_LIST)
+# x_test_tfidf_ngram_p = sel_percentile(test_data_sample.category, x_test_tfidf, vocab, PERCENTILE_LIST)
 
 x_train_tfidf_ngram.head()
 
@@ -345,8 +353,10 @@ x_test_tfidf = numpy.round(x_test_tfidf, 2)
 # produce a dataframe including the feature names
 x_train_tfidf_char = pandas.DataFrame(x_train_tfidf.toarray(), columns = char_vocab)
 x_test_tfidf_char = pandas.DataFrame(x_test_tfidf.toarray(), columns = char_vocab)
-x_train_tfidf_char_p = sel_percentile(train_data_sample.category, x_train_tfidf, char_vocab, PERCENTILE_LIST)
-x_test_tfidf_char_p = sel_percentile(test_data_sample.category, x_test_tfidf, char_vocab, PERCENTILE_LIST)
+x_train_tfidf_char_p, x_test_tfidf_char_p = sel_percentile(train_data_sample.category,
+    test_data_sample.category, x_train_tfidf, x_test_tfidf, char_vocab, PERCENTILE_LIST)
+# x_train_tfidf_char_p = sel_percentile(train_data_sample.category, x_train_tfidf, char_vocab, PERCENTILE_LIST)
+# x_test_tfidf_char_p = sel_percentile(test_data_sample.category, x_test_tfidf, char_vocab, PERCENTILE_LIST)
 
 x_train_tfidf_char.head()
 #%%
@@ -491,18 +501,18 @@ w2v_model_train = word2vec.Word2Vec(tokenized_corpus_train, size=feature_size,
 # %% [markdown]
 # ### Visualize Word Embedding
 
-# %%
-from sklearn.manifold import TSNE
-words = w2v_model_train.wv.index2word
-wvs = w2v_model_train.wv[words]
-tsne = TSNE(n_components=2, random_state=0, n_iter=500, perplexity=2)
-numpy.set_printoptions(suppress=True)
-T = tsne.fit_transform(wvs)
-labels = words
-plt.figure(figsize=(12, 6))
-plt.scatter(T[:, 0], T[:, 1], c='orange', edgecolors='r')
-for label, x, y in zip(labels, T[:, 0], T[:, 1]):
- plt.annotate(label, xy=(x+1, y+1), xytext=(0, 0), textcoords='offset points')
+# # %%
+# from sklearn.manifold import TSNE
+# words = w2v_model_train.wv.index2word
+# wvs = w2v_model_train.wv[words]
+# tsne = TSNE(n_components=2, random_state=0, n_iter=500, perplexity=2)
+# numpy.set_printoptions(suppress=True)
+# T = tsne.fit_transform(wvs)
+# labels = words
+# plt.figure(figsize=(12, 6))
+# plt.scatter(T[:, 0], T[:, 1], c='orange', edgecolors='r')
+# for label, x, y in zip(labels, T[:, 0], T[:, 1]):
+#  plt.annotate(label, xy=(x+1, y+1), xytext=(0, 0), textcoords='offset points')
 
 # %% [markdown]
 # ### Functions to get document level embeddings
@@ -544,13 +554,6 @@ x_test_w2v = pandas.DataFrame(w2v_feature_array_test)
 
 # %% [markdown]
 # ## Perform SVM as a baseline model and evaluate it.
-
-# %%
-# Use label_binarize to be multi-label like settings
-# X = x_train['content_cleaned']
-# y = x_train['category']
-# Y = label_binarize(y, classes=[1, 2, 3, 4])
-# n_classes = Y.shape[1]
 
 # %%
 word_freq_df = pandas.DataFrame(x_train_bagofwords.toarray(), columns=cv.get_feature_names())
@@ -680,19 +683,26 @@ v = x_test_bagofwords_p[10]
 #%% [markdown]
 # ### SVM for Bag of Words 90th percentile
 for p in PERCENTILE_LIST:
-    perc = 100 - p
-    run_svm(x_train_bagofwords_p[p], y_train, x_test_bagofwords_p[p], f'Bag of Words - {perc}th percentile')
+    run_svm(x_train_bagofwords_p[p], y_train, x_test_bagofwords_p[p], f'Bag of Words - {p}th percentile')
 
 #%% [markdown]
 # ### SVM for Bag of N-grams 90th percentile
-run_svm(x_train_bagofngrams_10p, y_train, x_test_bagofngrams_10p, 'Bag of N-Grams - 90th percentile')
+for p in PERCENTILE_LIST:
+    run_svm(x_train_bagofngrams_p[p], y_train, x_test_bagofngrams_p[p], 'Bag of N-Grams - {p}th percentile')
 
 #%% [markdown]
 # ### SVM for Bag of Chars 90th percentile
-run_svm(x_train_cv_char_10p, y_train, x_test_cv_char_10p, 'Bag of Chars - 90th percentile')
+for p in PERCENTILE_LIST:
+    run_svm(x_train_cv_char_p[p], y_train, x_test_cv_char_p[p], 'Bag of Chars - {p}th percentile')
 
 #%%
 #===================================<experimental code below>===================================
+# %%
+# Use label_binarize to be multi-label like settings
+# X = x_train['content_cleaned']
+# y = x_train['category']
+# Y = label_binarize(y, classes=[1, 2, 3, 4])
+# n_classes = Y.shape[1]
 
 # %%
 # from sklearn.naive_bayes import MultinomialNB
