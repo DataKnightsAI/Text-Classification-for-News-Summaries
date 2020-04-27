@@ -70,11 +70,11 @@ test_data_df.shape
 # ### Sample 4000 rows
 
 # %%
-train_data_sample = train_data_df.sample(n = 4000, replace = False, random_state = 123)
+train_data_sample = train_data_df #.sample(n=50000, replace=False, random_state=123)
 train_data_sample.head()
 
 # %% 
-test_data_sample = test_data_df.sample(n = 4000, replace = False, random_state = 123)
+test_data_sample = test_data_df #.sample(n=4000, replace=False, random_state=123)
 test_data_sample.head()
 
 # %% [markdown]
@@ -91,7 +91,7 @@ y_test = label_binarize(test_data_sample.category, classes=[1, 2, 3, 4])
 # %% [markdown]
 # ## Prepare for f_classif to try different percentiles
 
-# %%
+#%%
 # Constant variable to hold the percentiles we need
 PERCENTILE_LIST = [10, 25, 50, 75]
 
@@ -140,24 +140,28 @@ x_train_bagofwords_p, x_test_bagofwords_p = sel_percentile(train_data_sample.cat
 # x_test_bagofwords_p = sel_percentile(test_data_sample.category, x_test_cv, bow_vocab, PERCENTILE_LIST)
 x_train_bagofwords.head()
 
-# %%
+#%%
+import gc
+gc.collect()
+
+#%%
 # see the different by percentile feature selected versions of BOW
 x_train_bagofwords_p[10]
-# %% 
+#%% 
 x_train_bagofwords_p[25]
-# %% 
+#%% 
 x_train_bagofwords_p[50]
-# %% 
+#%% 
 x_test_bagofwords_p[75]
 
-# %%
+#%%
 # see the different by percentile feature selected versions of BOW
 x_test_bagofwords_p[10]
-# %% 
+#%% 
 x_test_bagofwords_p[25]
-# %% 
+#%% 
 x_test_bagofwords_p[50]
-# %% 
+#%% 
 x_test_bagofwords_p[75]
 
 # %% [markdown]
@@ -177,16 +181,18 @@ x_train_bagofngrams = pandas.DataFrame(x_train_cv.toarray(), columns=ngram_vocab
 x_test_bagofngrams = pandas.DataFrame(x_test_cv.toarray(), columns=ngram_vocab)
 x_train_bagofngrams_p, x_test_bagofngrams_p = sel_percentile(train_data_sample.category,
     test_data_sample.category, x_train_cv, x_test_cv, ngram_vocab, PERCENTILE_LIST)
+# x_train_bagofngrams_p = sel_percentile(train_data_sample.category, x_train_cv, ngram_vocab, PERCENTILE_LIST)
+# x_test_bagofngrams_p = sel_percentile(test_data_sample.category, x_test_cv, ngram_vocab, PERCENTILE_LIST)
 
 x_train_bagofngrams.head()
-# %%
+#%%
 # see the different by percentile feature selected versions of BOW
 x_train_bagofngrams_p[10]
-# %% 
+#%% 
 x_train_bagofngrams_p[25]
-# %% 
+#%% 
 x_train_bagofngrams_p[50]
-# %% 
+#%% 
 x_train_bagofngrams_p[75]
 
 # %% 
@@ -208,14 +214,14 @@ x_train_cv_char_p, x_test_cv_char_p = sel_percentile(train_data_sample.category,
 # x_test_cv_char_p = sel_percentile(test_data_sample.category, x_test_cv, cv_char_vocab, PERCENTILE_LIST)
 
 x_train_cv_char.head()
-# %%
+#%%
 # see the different by percentile feature selected versions of BOW
 x_train_cv_char_p[10]
-# %% 
+#%% 
 x_train_cv_char_p[25]
-# %% 
+#%% 
 x_train_cv_char_p[50]
-# %% 
+#%% 
 x_train_cv_char_p[75]
 
 # %% [markdown]
@@ -246,7 +252,7 @@ def words_barchart(df, df_label):
         fontweight='light'
     )
 
-# %% Bar chart of Bag of Words frequency
+#%% Bar chart of Bag of Words frequency
 words_barchart(x_train_bagofwords, bow_vocab)
 
 # %% Bar chart of N-Grams frequency
@@ -255,7 +261,7 @@ words_barchart(x_train_bagofngrams, ngram_vocab)
 # %% Bar chart of Character grams frequency
 words_barchart(x_train_cv_char, cv_char_vocab)
 
-# %% Bar chart of Bag of Words frequency for 90th percentile
+#%% Bar chart of Bag of Words frequency for 90th percentile
 words_barchart(x_train_bagofwords_p[10], x_train_bagofwords_p[10].columns.values)
 
 # %% Bar chart of N-Grams frequency for 90th percentile
@@ -289,17 +295,19 @@ x_train_tfidf_unigram = pandas.DataFrame(x_train_tfidf.toarray(), columns = voca
 x_test_tfidf_unigram = pandas.DataFrame(x_test_tfidf.toarray(), columns = vocab)
 x_train_tfidf_unigram_p, x_test_tfidf_unigram_p = sel_percentile(train_data_sample.category,
     test_data_sample.category, x_train_tfidf, x_test_tfidf, vocab, PERCENTILE_LIST)
+# x_train_tfidf_unigram_p = sel_percentile(train_data_sample.category, x_train_tfidf, vocab, PERCENTILE_LIST)
+# x_test_tfidf_unigram_p = sel_percentile(test_data_sample.category, x_test_tfidf, vocab, PERCENTILE_LIST)
 
 x_train_tfidf_unigram.head()
 
-# %%
+#%%
 # see the different by percentile feature selected versions of BOW
 x_train_tfidf_unigram_p[10]
-# %% 
+#%% 
 x_train_tfidf_unigram_p[25]
-# %% 
+#%% 
 x_train_tfidf_unigram_p[50]
-# %% 
+#%% 
 x_train_tfidf_unigram_p[75]
 
 # %% [markdown]
@@ -322,19 +330,20 @@ x_train_tfidf_ngram = pandas.DataFrame(x_train_tfidf.toarray(), columns = vocab)
 x_test_tfidf_ngram = pandas.DataFrame(x_test_tfidf.toarray(), columns = vocab)
 x_train_tfidf_ngram_p, x_test_tfidf_ngram_p = sel_percentile(train_data_sample.category,
     test_data_sample.category, x_train_tfidf, x_test_tfidf, vocab, PERCENTILE_LIST)
+# x_train_tfidf_ngram_p = sel_percentile(train_data_sample.category, x_train_tfidf, vocab, PERCENTILE_LIST)
+# x_test_tfidf_ngram_p = sel_percentile(test_data_sample.category, x_test_tfidf, vocab, PERCENTILE_LIST)
 
 x_train_tfidf_ngram.head()
 
-# %%
+#%%
 # see the different by percentile feature selected versions of TF-IDF N-grams
 x_train_tfidf_ngram_p[10]
-# %% 
+#%% 
 x_train_tfidf_ngram_p[25]
-# %% 
+#%% 
 x_train_tfidf_ngram_p[50]
-# %% 
+#%% 
 x_train_tfidf_ngram_p[75]
-
 # %% [markdown]
 # ### Character TF/IDF
 
@@ -356,16 +365,18 @@ x_train_tfidf_char = pandas.DataFrame(x_train_tfidf.toarray(), columns = char_vo
 x_test_tfidf_char = pandas.DataFrame(x_test_tfidf.toarray(), columns = char_vocab)
 x_train_tfidf_char_p, x_test_tfidf_char_p = sel_percentile(train_data_sample.category,
     test_data_sample.category, x_train_tfidf, x_test_tfidf, char_vocab, PERCENTILE_LIST)
+# x_train_tfidf_char_p = sel_percentile(train_data_sample.category, x_train_tfidf, char_vocab, PERCENTILE_LIST)
+# x_test_tfidf_char_p = sel_percentile(test_data_sample.category, x_test_tfidf, char_vocab, PERCENTILE_LIST)
 
 x_train_tfidf_char.head()
-# %%
+#%%
 # see the different by percentile feature selected versions of TF-IDF chars
 x_train_tfidf_char_p[10]
-# %% 
+#%% 
 x_train_tfidf_char_p[25]
-# %% 
+#%% 
 x_train_tfidf_char_p[50]
-# %% 
+#%% 
 x_train_tfidf_char_p[75]
 
 # %% [markdown]
@@ -493,6 +504,9 @@ sample = 1e-3   # Downsample setting for frequent words
 w2v_model_train = word2vec.Word2Vec(tokenized_corpus_train, size=feature_size, 
                           window=window_context, min_count=min_word_count,
                           sample=sample, iter=50)
+# w2v_model_test = word2vec.Word2Vec(tokenized_corpus_test, size=feature_size, 
+#                           window=window_context, min_count=min_word_count,
+#                           sample=sample, iter=50)
 
 # %% [markdown]
 # ### Functions to get document level embeddings for word2vec
@@ -543,7 +557,7 @@ word_freq_df.head(20)
 # %%
 top_words_df.head(20)
 
-# %% [markdown]
+#%% [markdown]
 # ## Run SVM and Plot the results
 
 # %%
@@ -623,53 +637,53 @@ def run_svm(x_train, y_train, x_test, emb):
 
     plt.show()
 
-# %% [markdown]
+#%% [markdown]
 # ### SVM for Bag of Words
 run_svm(x_train_bagofwords, y_train, x_test_bagofwords, 'Bag of Words')
 
-# %% [markdown]
+#%% [markdown]
 # ### SVM for Bag of N-grams
 run_svm(x_train_bagofngrams, y_train, x_test_bagofngrams, 'Bag of N-Grams')
 
-# %% [markdown]
+#%% [markdown]
 # ### SVM for Bag of Chars
 run_svm(x_train_cv_char, y_train, x_test_cv_char, 'Bag of Chars')
 
-# %% [markdown]
+#%% [markdown]
 # ### SVM for TF/IDF Unigram
 run_svm(x_train_tfidf_unigram, y_train, x_test_tfidf_unigram, 'TF/IDF Unigram')
 
-# %% [markdown]
+#%% [markdown]
 # ### SVM for TF/IDF N-grams
 run_svm(x_train_tfidf_ngram, y_train, x_test_tfidf_ngram, 'TF/IDF N-Grams')
 
-# %% [markdown]
+#%% [markdown]
 # ### SVM for TF/IDF Chars
 run_svm(x_train_tfidf_char, y_train, x_test_cv_char, 'TF/IDF Chars')
 
-# %% [markdown]
+#%% [markdown]
 # ### SVM for Word2Vec
 run_svm(x_train_w2v, y_train, x_test_w2v, 'Word2Vec')
 
-# %% [markdown]
-# ## Let's explore also the SVM performance on p-th percentile feature selection
+#%% [markdown]
+# ## Let's explore also the SVM performance on 90th percentile feature selection
 
-# %% [markdown]
-# ### SVM for Bag of Words p-th percentile
+#%% [markdown]
+# ### SVM for Bag of Words 90th percentile
 for p in PERCENTILE_LIST:
-    run_svm(x_train_bagofwords_p[p], y_train, x_test_bagofwords_p[p], f'Bag of Words - {100-p}th percentile')
+    run_svm(x_train_bagofwords_p[p], y_train, x_test_bagofwords_p[p], f'Bag of Words - {p}th percentile')
 
-# %% [markdown]
-# ### SVM for Bag of N-grams p-th percentile
+#%% [markdown]
+# ### SVM for Bag of N-grams 90th percentile
 for p in PERCENTILE_LIST:
-    run_svm(x_train_bagofngrams_p[p], y_train, x_test_bagofngrams_p[p], f'Bag of N-Grams - {100-p}th percentile')
+    run_svm(x_train_bagofngrams_p[p], y_train, x_test_bagofngrams_p[p], 'Bag of N-Grams - {p}th percentile')
 
-# %% [markdown]
-# ### SVM for Bag of Chars p-th percentile
+#%% [markdown]
+# ### SVM for Bag of Chars 90th percentile
 for p in PERCENTILE_LIST:
-    run_svm(x_train_cv_char_p[p], y_train, x_test_cv_char_p[p], f'Bag of Chars - {100-p}th percentile')
+    run_svm(x_train_cv_char_p[p], y_train, x_test_cv_char_p[p], 'Bag of Chars - {p}th percentile')
 
-# %%
+#%%
 # ## References - Code sample sources disclaimer:
 # Code for this project is either directly from (with some modification), or inspired by, but not limited to the following sources:
 # Kelly Epley Naive Bayes: 
@@ -700,7 +714,7 @@ for p in PERCENTILE_LIST:
 # Udacity course video on Youtube UD120:
 #   https://www.youtube.com/watch?v=GdsLRKjjKLw
 
-# %%
+#%%
 #===================================<experimental code below>===================================
 # %%
 # Use label_binarize to be multi-label like settings
@@ -841,10 +855,3 @@ for p in PERCENTILE_LIST:
 # cluster_labels = fcluster(Z, max_dist, criterion='distance')
 # cluster_labels = pandas.DataFrame(cluster_labels, columns=['ClusterLabel'])
 # pandas.concat([train_data_sample, cluster_labels], axis=1)
-
-# x_train_tfidf_char_p = sel_percentile(train_data_sample.category, x_train_tfidf, char_vocab, PERCENTILE_LIST)
-# x_test_tfidf_char_p = sel_percentile(test_data_sample.category, x_test_tfidf, char_vocab, PERCENTILE_LIST)
-
-# w2v_model_test = word2vec.Word2Vec(tokenized_corpus_test, size=feature_size, 
-#                           window=window_context, min_count=min_word_count,
-#                           sample=sample, iter=50)
