@@ -499,23 +499,7 @@ w2v_model_train = word2vec.Word2Vec(tokenized_corpus_train, size=feature_size,
 #                           sample=sample, iter=50)
 
 # %% [markdown]
-# ### Visualize Word Embedding
-
-# # %%
-# from sklearn.manifold import TSNE
-# words = w2v_model_train.wv.index2word
-# wvs = w2v_model_train.wv[words]
-# tsne = TSNE(n_components=2, random_state=0, n_iter=500, perplexity=2)
-# numpy.set_printoptions(suppress=True)
-# T = tsne.fit_transform(wvs)
-# labels = words
-# plt.figure(figsize=(12, 6))
-# plt.scatter(T[:, 0], T[:, 1], c='orange', edgecolors='r')
-# for label, x, y in zip(labels, T[:, 0], T[:, 1]):
-#  plt.annotate(label, xy=(x+1, y+1), xytext=(0, 0), textcoords='offset points')
-
-# %% [markdown]
-# ### Functions to get document level embeddings
+# ### Functions to get document level embeddings for word2vec
 # ### The idea is to distill a word vector of 'n' features into a single point and use that at a document level
 
 # %%
@@ -696,6 +680,37 @@ for p in PERCENTILE_LIST:
     run_svm(x_train_cv_char_p[p], y_train, x_test_cv_char_p[p], 'Bag of Chars - {p}th percentile')
 
 #%%
+# ## References - Code sample sources disclaimer:
+# Code for this project is either directly from (with some modification), or inspired by, but not limited to the following sources:
+# Kelly Epley Naive Bayes: 
+#   https://towardsdatascience.com/naive-bayes-document-classification-in-python-e33ff50f937e
+# MLWhiz's excellent blogs about text classification and NLP: 
+#   https://mlwhiz.com/blog/2018/12/17/text_classification/
+#   https://mlwhiz.com/blog/2019/01/17/deeplearning_nlp_preprocess/
+#   https://mlwhiz.com/blog/2019/02/08/deeplearning_nlp_conventional_methods/
+#   https://www.kaggle.com/mlwhiz/conventional-methods-for-quora-classification/
+# Christof Henkel preprocessing: 
+#   https://www.kaggle.com/christofhenkel/how-to-preprocessing-when-using-embeddings
+# datanizing GmbH:
+#   https://medium.com/@datanizing/modern-text-mining-with-python-part-1-of-5-introduction-cleaning-and-linguistics-647f9ec85b6a
+# Datacamp wordcloud:
+#   https://www.datacamp.com/community/tutorials/wordcloud-python
+# Seaborn Pydata tutorials:
+#   https://seaborn.pydata.org/introduction.html#intro-plot-customization
+# Dipanjan S's tutorials:
+#   https://github.com/dipanjanS
+# Analytics Vidhya:
+#   https://www.analyticsvidhya.com/blog/2018/04/a-comprehensive-guide-to-understand-and-implement-text-classification-in-python/
+# Jason Brownlee's Feature Selection For Machine Learning in Python
+#   https://machinelearningmastery.com/feature-selection-machine-learning-python/
+# Susan Li's Multi-class text classification with Scikit-learn:
+#   https://towardsdatascience.com/multi-class-text-classification-with-scikit-learn-12f1e60e0a9f
+# Vadim Smolyakov Ensemble Learning to Improve Machine Learning Results:
+#   https://blog.statsbot.co/ensemble-learning-d1dcd548e936
+# Udacity course video on Youtube UD120:
+#   https://www.youtube.com/watch?v=GdsLRKjjKLw
+
+#%%
 #===================================<experimental code below>===================================
 # %%
 # Use label_binarize to be multi-label like settings
@@ -703,6 +718,22 @@ for p in PERCENTILE_LIST:
 # y = x_train['category']
 # Y = label_binarize(y, classes=[1, 2, 3, 4])
 # n_classes = Y.shape[1]
+
+# %% [markdown]
+# ### Visualize Word Embedding for Word2Vec
+
+# # %%
+# from sklearn.manifold import TSNE
+# words = w2v_model_train.wv.index2word
+# wvs = w2v_model_train.wv[words]
+# tsne = TSNE(n_components=2, random_state=0, n_iter=500, perplexity=2)
+# numpy.set_printoptions(suppress=True)
+# T = tsne.fit_transform(wvs)
+# labels = words
+# plt.figure(figsize=(12, 6))
+# plt.scatter(T[:, 0], T[:, 1], c='orange', edgecolors='r')
+# for label, x, y in zip(labels, T[:, 0], T[:, 1]):
+#  plt.annotate(label, xy=(x+1, y+1), xytext=(0, 0), textcoords='offset points')
 
 # %%
 # from sklearn.naive_bayes import MultinomialNB
