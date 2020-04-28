@@ -495,7 +495,7 @@ tokenized_corpus_train = [wpt.tokenize(document) for document in x_train]
 tokenized_corpus_test = [wpt.tokenize(document) for document in x_test]
 
 # Set values for various parameters
-feature_size = 4000    # Word vector dimensionality  
+feature_size = 300    # Word vector dimensionality  
 window_context = 20          # Context window size      
 workers = 12                                                                              
 min_word_count = 5   # Minimum word count                        
@@ -515,7 +515,7 @@ w2v_model_train = word2vec.Word2Vec(tokenized_corpus_train, size=feature_size,
 # %%
 def average_word_vectors(words, model, vocabulary, num_features):
 
- feature_vector = numpy.zeros((num_features,),dtype="float64")
+ feature_vector = numpy.zeros((num_features,), dtype="float32")
  nwords = 0.
 
  for word in words:
@@ -538,13 +538,34 @@ def averaged_word_vectorizer(corpus, model, num_features):
 # ### Obtain document level embeddings
 
 # %%
-w2v_feature_array_train = averaged_word_vectorizer(corpus=tokenized_corpus_train, model=w2v_model_train,
-                                            num_features=feature_size)
-w2v_feature_array_test = averaged_word_vectorizer(corpus=tokenized_corpus_test, model=w2v_model_train,
-                                            num_features=feature_size)
+w2v_feature_array_train = averaged_word_vectorizer(corpus=tokenized_corpus_train,
+    model=w2v_model_train, num_features=feature_size)
+w2v_feature_array_test = averaged_word_vectorizer(corpus=tokenized_corpus_test,
+    model=w2v_model_train, num_features=feature_size)
 x_train_w2v = pandas.DataFrame(w2v_feature_array_train)
 x_test_w2v = pandas.DataFrame(w2v_feature_array_test)
 
+# %% [markdown]
+# ### Save word2vec models and vector representations
+w2v_model_train.save('custom-trained-word2vec-120000.model')
+w2v_model_train.wv.save('custom-trained-word2vec-120000.kv')
+
+# %%
+# Could be better
+numpy.save('word2vec-train-features.npy', w2v_feature_array_train)
+numpy.save('word2vec-test-features.npy', w2v_feature_array_test)
+
+# %%
+# I guess this is the best we can do (approx 75% of .npy)
+from numpy import savez_compressed
+savez_compressed('word2vec-train-features-120000.npz', w2v_feature_array_train)
+savez_compressed('word2vec-test-features-120000.npz', w2v_feature_array_test)
+
+# %%
+# WAY TOO BIG !!!! (approx 5x .npz)
+from numpy import savetxt
+savetxt('word2vec-train-features.csv', w2v_feature_array_train, delimiter=',')
+savetxt('word2vec-test-features.csv', w2v_feature_array_test, delimiter=',')
 
 # %% [markdown]
 # ## Perform SVM as a baseline model and evaluate it.
