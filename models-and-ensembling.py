@@ -72,8 +72,10 @@ y_test = label_binarize(test_data_df.category, classes=[1, 2, 3, 4])
 # #### Load word2vec feature arrays from .npz files
 
 # load dict of arrays
-w2v_train_features_array_dict = numpy.load('word2vec-train-features-120000.npz')
-w2v_test_features_array_dict = numpy.load('word2vec-test-features-120000.npz')
+w2v_train_features_array_dict = numpy.load(
+    './data/word2vec-train-features-120000-min5dim300.npz')
+w2v_test_features_array_dict = numpy.load(
+    './data/word2vec-test-features-120000-min5dim300.npz')
 # extract the first array from train
 data = w2v_train_features_array_dict['arr_0']
 # print the array
@@ -85,7 +87,8 @@ print(data)
 
 # %% [markdown]
 # #### Load word2vec model trained key vectors
-w2v_model_train = KeyedVectors.load('custom-trained-word2vec-120000.kv')
+w2v_model_train = KeyedVectors.load(
+    './data/custom-trained-word2vec-120000-min5dim300.kv')
 
 # %% [markdown]
 # #### Get the word2vec data back into usable form
@@ -228,10 +231,15 @@ def prf1_plot(precision, recall, average_precision, algo_name, n_classes):
 
 # %% [markdown]
 # ## Run the Models
-scores = []
 
 # Get the SVM model fitted
 svm_model = run_svm(x_train_w2v, y_train)
 
-# Calculate and plot the Precision, Recall, Avg Precision, F1
+# %% [markdown]
+# ## Get the scores
+scores = []
+
+# For SVM calculate and plot the Precision, Recall, Avg Precision
 scores = scores.append(prf1_calc(svm_model, 'SVM', N_CLASSES, x_test_w2v, y_test))
+
+# %%
