@@ -70,7 +70,7 @@ test_data_df.shape
 # ### Sample 4000 rows
 
 # %%
-train_data_sample = train_data_df #.sample(n=50000, replace=False, random_state=123)
+train_data_sample = train_data_df.sample(n=10000, replace=False, random_state=123)
 train_data_sample.head()
 
 # %% 
@@ -571,12 +571,12 @@ savetxt('word2vec-test-features.csv', w2v_feature_array_test, delimiter=',')
 # ## Perform SVM as a baseline model and evaluate it.
 
 # %%
-word_freq_df = pandas.DataFrame(x_train_bagofwords.toarray(), columns=cv.get_feature_names())
-top_words_df = pandas.DataFrame(word_freq_df.sum()).sort_values(0, ascending=False)
-word_freq_df.head(20)
+#word_freq_df = pandas.DataFrame(x_train_bagofwords.toarray(), columns=cv.get_feature_names())
+#top_words_df = pandas.DataFrame(word_freq_df.sum()).sort_values(0, ascending=False)
+#word_freq_df.head(20)
 
 # %%
-top_words_df.head(20)
+#top_words_df.head(20)
 
 #%% [markdown]
 # ## Run SVM and Plot the results
@@ -588,6 +588,9 @@ def run_svm(x_train, y_train, x_test, emb):
     classifier = OneVsRestClassifier(svm.LinearSVC(random_state=1))
     classifier.fit(x_train, y_train)
     y_score = classifier.decision_function(x_test)
+    res = pandas.DataFrame(classifier.predict(x_test))
+    #res = res.dot([0,1,2,3])
+    return res
 
     # The average precision score in multi-label settings
     # For each class
@@ -684,7 +687,16 @@ run_svm(x_train_tfidf_char, y_train, x_test_cv_char, 'TF/IDF Chars')
 
 #%% [markdown]
 # ### SVM for Word2Vec
-run_svm(x_train_w2v, y_train, x_test_w2v, 'Word2Vec')
+test_res = run_svm(x_train_w2v, y_train, x_test_w2v, 'Word2Vec')
+
+#%%
+view_res = pandas.DataFrame(test_res)
+#%%
+#view_res[0] = view_res[0]+1
+#%%
+test_data_trial = test_data_sample.join(view_res)
+#%%
+pandas.DataFrame.to_csv(test_data_trial,"test_data_trial.csv", sep = ",")
 
 #%% [markdown]
 # ## Let's explore also the SVM performance on 90th percentile feature selection
@@ -703,6 +715,9 @@ for p in PERCENTILE_LIST:
 # ### SVM for Bag of Chars 90th percentile
 for p in PERCENTILE_LIST:
     run_svm(x_train_cv_char_p[p], y_train, x_test_cv_char_p[p], 'Bag of Chars - {p}th percentile')
+
+#%%
+# ### 
 
 #%%
 # ## References - Code sample sources disclaimer:
