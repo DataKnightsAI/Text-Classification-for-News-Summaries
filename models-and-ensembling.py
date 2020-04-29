@@ -167,10 +167,10 @@ def prf1_calc(classifier, algo_name, n_classes, x_test, y_test):
                                                         average="micro")
 
     # Plot the data
-    prf1_plot(precision, recall, average_precision, algo_name)
+    prf1_plot(precision, recall, average_precision, algo_name, n_classes)
 
     # Return all metrics
-    results = [algo_name, precision, recall, average_precision, n_classes]
+    results = [algo_name, precision, recall, average_precision]
     return results
 
 # Function to Plot Precision, Recall, F1
