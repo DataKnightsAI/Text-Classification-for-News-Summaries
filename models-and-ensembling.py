@@ -57,7 +57,7 @@ test_data_df
 # %% [markdown]
 # #### Train & Test data where x is the predictor features, y is the predicted feature
 
-n_classes = 4
+N_CLASSES = 4
 
 x_train = train_data_df.content_cleaned
 y_train = label_binarize(train_data_df.category, classes=[1, 2, 3, 4])
@@ -66,7 +66,10 @@ x_test = test_data_df.content_cleaned
 y_test = label_binarize(test_data_df.category, classes=[1, 2, 3, 4])
 
 # %% [markdown]
-# ### Load word2vec feature arrays from .npz files
+# ### Load word2vec data
+
+# %% [markdown]
+# #### Load word2vec feature arrays from .npz files
 
 # load dict of arrays
 w2v_train_features_array_dict = numpy.load('word2vec-train-features-120000.npz')
@@ -81,11 +84,11 @@ data = w2v_test_features_array_dict['arr_0']
 print(data)
 
 # %% [markdown]
-# ### Load word2vec model trained key vectors
+# #### Load word2vec model trained key vectors
 w2v_model_train = KeyedVectors.load('custom-trained-word2vec-120000.kv')
 
 # %% [markdown]
-# ### Get the word2vec data back into usable form
+# #### Get the word2vec data back into usable form
 
 wpt = WordPunctTokenizer()
 tokenized_corpus_train = [wpt.tokenize(document) for document in x_train]
@@ -114,32 +117,35 @@ def averaged_word_vectorizer(corpus, model, num_features):
  return numpy.array(features)
 
 # %% [markdown]
-# ### Obtain document level embeddings
+# #### Obtain document level embeddings
 
 # %%
-feature_size = 300
+FEATURE_SIZE = 300
+
 w2v_feature_array_train = averaged_word_vectorizer(corpus=tokenized_corpus_train,
-    model=w2v_model_train, num_features=feature_size)
+    model=w2v_model_train, num_features=FEATURE_SIZE)
 w2v_feature_array_test = averaged_word_vectorizer(corpus=tokenized_corpus_test,
-    model=w2v_model_train, num_features=feature_size)
+    model=w2v_model_train, num_features=FEATURE_SIZE)
+
 x_train_w2v = pandas.DataFrame(w2v_feature_array_train)
 x_test_w2v = pandas.DataFrame(w2v_feature_array_test)
 
 # %% [markdown]
-# ## Run Models
+# ## Build Models
 
 # %% [markdown]
-# ### SVM Model
+# ### SVM Model Building Functions
 
-# SVM classifier and plot superfunction
-def run_svm(x_train, y_train, x_test, emb):
-    str(emb)
+# SVM classifier function
+def run_svm(x_train, y_train):
     classifier = OneVsRestClassifier(svm.LinearSVC(random_state=1))
     classifier.fit(x_train, y_train)
+    return classifier
+
+# Calculate, then plot the Precision, Recall, Average Precision, F1
+def prf1_calc(classifier, algo_name, n_classes, x_test, y_test):
+    # Get the decision function from the classifier
     y_score = classifier.decision_function(x_test)
-    res = pandas.DataFrame(classifier.predict(x_test))
-    #res = res.dot([0,1,2,3])
-    return res
 
     # The average precision score in multi-label settings
     # For each class
@@ -156,7 +162,17 @@ def run_svm(x_train, y_train, x_test, emb):
         y_score.ravel())
     average_precision["micro"] = average_precision_score(y_test, y_score,
                                                         average="micro")
-    print(emb)
+
+    # Plot the data
+    prf1_plot(precision, recall, average_precision, algo_name)
+
+    # Return all metrics
+    results = [algo_name, precision, recall, average_precision, n_classes]
+    return results
+
+# Function to Plot Precision, Recall, F1
+def prf1_plot(precision, recall, average_precision, algo_name, n_classes):
+    print(algo_name)
     print('Average precision score, micro-averaged over all classes: {0:0.2f}'
         .format(average_precision["micro"]))
 
@@ -209,3 +225,13 @@ def run_svm(x_train, y_train, x_test, emb):
     plt.legend(lines, labels, loc=(0, -.5), prop=dict(size=14))
 
     plt.show()
+
+# %% [markdown]
+# ## Run the Models
+scores = []
+
+# Get the SVM model fitted
+svm_model = run_svm(x_train_w2v, y_train)
+
+# Calculate and plot the Precision, Recall, Avg Precision, F1
+scores = scores.append(prf1_calc(svm_model, 'SVM', N_CLASSES, x_test_w2v, y_test))
