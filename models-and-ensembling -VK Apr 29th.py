@@ -17,6 +17,8 @@ from sklearn.metrics import precision_recall_curve # The average precision score
 from sklearn.metrics import average_precision_score
 from sklearn import svm # Support Vector Machine
 from itertools import cycle
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import Pipeline
 
 # %% [markdown]
 # ## Read in the data
@@ -243,4 +245,15 @@ scores = []
 scores = scores.append(prf1_calc(svm_model, 'SVM', N_CLASSES, x_test_w2v, y_test))
 
 # %%
-# Logistic Regression
+# Logistic Regression function
+def run_logreg(x_train, y_train):
+    #classifier = OneVsRestClassifier(svm.LinearSVC(random_state=1))
+    classifier = OneVsRestClassifier(LogisticRegression(random_state=1))
+    classifier.fit(x_train, y_train)
+    return classifier
+
+# %%
+# Run Logistic Regression Model
+logreg_model = run_logreg(x_train_w2v, y_train)
+
+# %%
