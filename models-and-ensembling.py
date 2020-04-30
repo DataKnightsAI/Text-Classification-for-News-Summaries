@@ -15,6 +15,9 @@ from matplotlib import pyplot as plt
 import seaborn as sns
 from sklearn.metrics import precision_recall_curve # The average precision score in multi-label settings
 from sklearn.metrics import average_precision_score
+from sklearn.metrics import f1_score
+from sklearn.metrics import matthews_corrcoef
+from sklearn.metrics import precision_recall_fscore_support
 from sklearn import svm # Support Vector Machine
 from itertools import cycle
 from sklearn.linear_model import LogisticRegression
@@ -173,37 +176,44 @@ def run_dectree(x_train, y_train):
 # Calculate, then plot the Precision, Recall, Average Precision, F1
 def prf1_calc(classifier, algo_name, n_classes, x_test, y_test):
     # Get the decision function from the classifier
-    if algo_name == 'NB' or algo_name == 'DT':
-        y_score = classifier.predict(x_test) 
-    else:
+    if algo_name == 'SVM':
         y_score = classifier.decision_function(x_test)
+    else:
+        y_score = classifier.predict_proba(x_test)
+    y_pred = classifier.predict(x_test)
 
     # The average precision score in multi-label settings
     # For each class
     precision = dict()
     recall = dict()
+    average_f1 = dict()
     average_precision = dict()
+    mcc = dict()
     for i in range(n_classes):
         precision[i], recall[i], _ = precision_recall_curve(y_test[:, i],
                                                             y_score[:, i])
         average_precision[i] = average_precision_score(y_test[:, i], y_score[:, i])
+        average_f1[i] = f1_score(y_test[:, i], y_pred[:, i])
+        mcc[i] = matthews_corrcoef(y_test[:, i], y_pred[:, i])
 
     # A "micro-average": quantifying score on all classes jointly
     precision["micro"], recall["micro"], _ = precision_recall_curve(y_test.ravel(),
         y_score.ravel())
     average_precision["micro"] = average_precision_score(y_test, y_score,
                                                         average="micro")
+    average_f1['micro'] = f1_score(y_test, y_pred, average='micro')
+    mcc['micro'] = sum(mcc.values())/4
 
     # Plot the data
     prf1_plot(precision, recall, average_precision, algo_name, n_classes)
 
     # Return all metrics
     results = pandas.DataFrame()
-    results.at[0, 'P-R 0'] = numpy.round(average_precision[0], 3)
-    results.at[0, 'P-R 1'] = numpy.round(average_precision[1], 3)
-    results.at[0, 'P-R 2'] = numpy.round(average_precision[2], 3)
-    results.at[0, 'P-R 3'] = numpy.round(average_precision[3], 3)
-    results.at[0, 'P-R Avg'] = numpy.round(average_precision['micro'], 3)
+
+    for k in average_precision.keys():
+        results.at[algo_name, f'P-R {k}'] = numpy.round(average_precision[k], 3)
+        results.at[algo_name, f'F1 {k}'] = numpy.round(average_f1[k], 3)
+        results.at[algo_name, f'MCC {k}'] = numpy.round(mcc[k], 3)
 
     return results
 
@@ -222,7 +232,7 @@ def prf1_plot(precision, recall, average_precision, algo_name, n_classes):
     plt.ylim([0.0, 1.05])
     plt.xlim([0.0, 1.0])
     plt.title(
-        'Average precision score for, micro-averaged over all classes: AP={0:0.2f}'
+        'Average precision score, micro-averaged over all classes: AP={0:0.2f}'
         .format(average_precision["micro"]))
     
     # Plot Precision-Recall curve for each class and iso-f1 curves
