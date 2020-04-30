@@ -17,6 +17,9 @@ from sklearn.metrics import precision_recall_curve # The average precision score
 from sklearn.metrics import average_precision_score
 from sklearn import svm # Support Vector Machine
 from itertools import cycle
+from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import GaussianNB
+from sklearn import tree
 
 # %% [markdown]
 # ## Read in the data
@@ -137,18 +140,43 @@ x_test_w2v = pandas.DataFrame(w2v_feature_array_test)
 # ## Build Models
 
 # %% [markdown]
-# ### SVM Model Building Functions
-
-# SVM classifier function
+# ### SVM Model Building Function
 def run_svm(x_train, y_train):
     classifier = OneVsRestClassifier(svm.LinearSVC(random_state=1))
     classifier.fit(x_train, y_train)
     return classifier
 
+# %% [markdown]
+# ### Logistic Regression Model Building Function
+def run_logreg(x_train, y_train):
+    classifier = OneVsRestClassifier(LogisticRegression(random_state=1))
+    classifier.fit(x_train, y_train)
+    return classifier
+
+# %% [markdown]
+# ### Naive Bayes Function
+def run_nb(x_train, y_train):
+    classifier = OneVsRestClassifier(GaussianNB())
+    classifier.fit(x_train, y_train)
+    return classifier
+
+# %% [markdown]
+# ### Decision Trees Function
+def run_dectree(x_train, y_train):
+    classifier = OneVsRestClassifier(tree.DecisionTreeClassifier())
+    classifier.fit(x_train, y_train)
+    return classifier 
+
+# %% [markdown]
+# ### Functions to calculate scores and to plot them
+
 # Calculate, then plot the Precision, Recall, Average Precision, F1
 def prf1_calc(classifier, algo_name, n_classes, x_test, y_test):
     # Get the decision function from the classifier
-    y_score = classifier.decision_function(x_test)
+    if algo_name == 'NB' or algo_name == 'DT':
+        y_score = classifier.predict(x_test) 
+    else:
+        y_score = classifier.decision_function(x_test)
 
     # The average precision score in multi-label settings
     # For each class
@@ -239,18 +267,42 @@ def prf1_plot(precision, recall, average_precision, algo_name, n_classes):
 # ## Run the Models
 
 # %%
-# Get the SVM model fitted
+# Run SVM Model
 svm_model = run_svm(x_train_w2v, y_train)
+
+# %%
+# Run Logistic Regression Model
+logreg_model = run_logreg(x_train_w2v, y_train)
+
+# %% 
+# Run Naive Bayes Classifier
+nb_model = run_nb(x_train_w2v, y_train)
+
+# %%
+# Run Decision Trees Classifier
+dectree_model = run_dectree(x_train_w2v, y_train)
 
 # %% [markdown]
 # ## Get the scores
 
 # %%
+# Initialize the dataframe to keep track of the scores
 scores = pandas.DataFrame()
 
-# %%
-# For SVM calculate and plot the Precision, Recall, Avg Precision
+# %% 
+# Precision, Recall, Avg. Precision for SVM
 scores = scores.append(prf1_calc(svm_model, 'SVM', N_CLASSES, x_test_w2v, y_test))
 
+# %% 
+# Precision, Recall, Avg. Precision for LOG REG
+scores = scores.append(prf1_calc(logreg_model, 'LOGREG', N_CLASSES, x_test_w2v, y_test))
+
+# %% 
+# Precision, Recall, Avg. Precision for Naive Bayes
+scores = scores.append(prf1_calc(nb_model, 'NB', N_CLASSES, x_test_w2v, y_test))
+
+# %% 
+# Precision, Recall, Avg. Precision for Decision Trees
+scores = scores.append(prf1_calc(dectree_model, 'DT', N_CLASSES, x_test_w2v, y_test))
+
 # %%
-# Logistic Regression
