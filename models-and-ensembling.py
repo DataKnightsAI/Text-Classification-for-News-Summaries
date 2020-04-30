@@ -170,7 +170,13 @@ def prf1_calc(classifier, algo_name, n_classes, x_test, y_test):
     prf1_plot(precision, recall, average_precision, algo_name, n_classes)
 
     # Return all metrics
-    results = [algo_name, precision, recall, average_precision]
+    results = pandas.DataFrame()
+    results.at[0, 'P-R 0'] = numpy.round(average_precision[0], 3)
+    results.at[0, 'P-R 1'] = numpy.round(average_precision[1], 3)
+    results.at[0, 'P-R 2'] = numpy.round(average_precision[2], 3)
+    results.at[0, 'P-R 3'] = numpy.round(average_precision[3], 3)
+    results.at[0, 'P-R Avg'] = numpy.round(average_precision['micro'], 3)
+
     return results
 
 # Function to Plot Precision, Recall, F1
@@ -232,13 +238,17 @@ def prf1_plot(precision, recall, average_precision, algo_name, n_classes):
 # %% [markdown]
 # ## Run the Models
 
+# %%
 # Get the SVM model fitted
 svm_model = run_svm(x_train_w2v, y_train)
 
 # %% [markdown]
 # ## Get the scores
-scores = []
 
+# %%
+scores = pandas.DataFrame()
+
+# %%
 # For SVM calculate and plot the Precision, Recall, Avg Precision
 scores = scores.append(prf1_calc(svm_model, 'SVM', N_CLASSES, x_test_w2v, y_test))
 
