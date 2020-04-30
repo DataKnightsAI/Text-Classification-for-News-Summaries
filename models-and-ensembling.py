@@ -23,6 +23,8 @@ from itertools import cycle
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn import tree
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold
 
 # %% [markdown]
 # ## Read in the data
@@ -48,17 +50,6 @@ train_data_df
 
 # %%
 test_data_df
-
-# # %% [markdown]
-# # #### Sample 4000 rows
-
-# # %%
-# train_data_sample = train_data_df #.sample(n=10000, replace=False, random_state=123)
-# train_data_sample.head()
-
-# # %% 
-# test_data_sample = test_data_df #.sample(n=4000, replace=False, random_state=123)
-# test_data_sample.head()
 
 # %% [markdown]
 # #### Train & Test data where x is the predictor features, y is the predicted feature
@@ -102,6 +93,9 @@ w2v_model_train = KeyedVectors.load(
 wpt = WordPunctTokenizer()
 tokenized_corpus_train = [wpt.tokenize(document) for document in x_train]
 tokenized_corpus_test = [wpt.tokenize(document) for document in x_test]
+
+del(x_train)
+del(x_test)
 
 # %%
 def average_word_vectors(words, model, vocabulary, num_features):
@@ -314,5 +308,34 @@ scores = scores.append(prf1_calc(nb_model, 'NB', N_CLASSES, x_test_w2v, y_test))
 # %% 
 # Precision, Recall, Avg. Precision for Decision Trees
 scores = scores.append(prf1_calc(dectree_model, 'DT', N_CLASSES, x_test_w2v, y_test))
+
+# %% [markdown]
+# ## Look at Cross-Validation
+
+# %%
+from sklearn.model_selection import cross_validate
+from sklearn.metrics import precision_score, recall_score, roc_auc_score
+from sklearn.metrics import make_scorer
+
+clf = OneVsRestClassifier(GaussianNB())
+scoring = {'precision': make_scorer(precision_score, average='micro'), 
+           'recall': make_scorer(recall_score, average='micro'), 
+           'f1': make_scorer(f1_score, average='micro'),
+           'roc_auc': make_scorer(roc_auc_score, average='micro'),
+           #'mcc': make_scorer(matthews_corrcoef)
+          }
+metrics = cross_validate(
+    clf,
+    x_train_w2v,
+    y_train,
+    cv=5,
+    scoring = scoring,
+    return_train_score=False,
+    n_jobs=5
+)
+sorted(metrics.keys())
+
+# %%
+metrics['test_f1']
 
 # %%
