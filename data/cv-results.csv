@@ -1,0 +1,121 @@
+,0,1,2,3
+0,Gaussian Naive Bayes,0,fit_time,11.884308576583862
+1,Gaussian Naive Bayes,1,fit_time,9.337676763534546
+2,Gaussian Naive Bayes,2,fit_time,9.63533067703247
+3,Gaussian Naive Bayes,3,fit_time,9.610399007797241
+4,Gaussian Naive Bayes,4,fit_time,12.282121419906616
+5,Gaussian Naive Bayes,0,score_time,4.152484655380249
+6,Gaussian Naive Bayes,1,score_time,4.9950761795043945
+7,Gaussian Naive Bayes,2,score_time,4.975355386734009
+8,Gaussian Naive Bayes,3,score_time,4.9282050132751465
+9,Gaussian Naive Bayes,4,score_time,4.149611234664917
+10,Gaussian Naive Bayes,0,test_precision,0.7572252212551871
+11,Gaussian Naive Bayes,1,test_precision,0.7710638925778368
+12,Gaussian Naive Bayes,2,test_precision,0.7667392990360823
+13,Gaussian Naive Bayes,3,test_precision,0.7706670571867906
+14,Gaussian Naive Bayes,4,test_precision,0.7657079235479681
+15,Gaussian Naive Bayes,0,test_recall,0.8591666666666666
+16,Gaussian Naive Bayes,1,test_recall,0.8709166666666667
+17,Gaussian Naive Bayes,2,test_recall,0.8650416666666667
+18,Gaussian Naive Bayes,3,test_recall,0.8770833333333333
+19,Gaussian Naive Bayes,4,test_recall,0.8596666666666667
+20,Gaussian Naive Bayes,0,test_f1,0.8049813589428276
+21,Gaussian Naive Bayes,1,test_f1,0.8179541363387337
+22,Gaussian Naive Bayes,2,test_f1,0.8129294986001527
+23,Gaussian Naive Bayes,3,test_f1,0.8204388665861168
+24,Gaussian Naive Bayes,4,test_f1,0.8099715379330651
+25,Gaussian Naive Bayes,0,test_roc_auc,0.8836736111111111
+26,Gaussian Naive Bayes,1,test_roc_auc,0.892361111111111
+27,Gaussian Naive Bayes,2,test_roc_auc,0.8886597222222222
+28,Gaussian Naive Bayes,3,test_roc_auc,0.8950416666666666
+29,Gaussian Naive Bayes,4,test_roc_auc,0.8859930555555555
+30,SVM/Linear SVC,0,fit_time,722.9958868026733
+31,SVM/Linear SVC,1,fit_time,737.0517201423645
+32,SVM/Linear SVC,2,fit_time,736.6396260261536
+33,SVM/Linear SVC,3,fit_time,744.4603035449982
+34,SVM/Linear SVC,4,fit_time,739.8915572166443
+35,SVM/Linear SVC,0,score_time,1.2216813564300537
+36,SVM/Linear SVC,1,score_time,0.9406082630157471
+37,SVM/Linear SVC,2,score_time,0.9885683059692383
+38,SVM/Linear SVC,3,score_time,0.5002012252807617
+39,SVM/Linear SVC,4,score_time,0.7885384559631348
+40,SVM/Linear SVC,0,test_precision,0.8760137517630465
+41,SVM/Linear SVC,1,test_precision,0.8955237084217976
+42,SVM/Linear SVC,2,test_precision,0.8923699727184722
+43,SVM/Linear SVC,3,test_precision,0.9060135404221425
+44,SVM/Linear SVC,4,test_precision,0.9001295857723759
+45,SVM/Linear SVC,0,test_recall,0.828125
+46,SVM/Linear SVC,1,test_recall,0.8435833333333334
+47,SVM/Linear SVC,2,test_recall,0.845
+48,SVM/Linear SVC,3,test_recall,0.853125
+49,SVM/Linear SVC,4,test_recall,0.8393333333333334
+50,SVM/Linear SVC,0,test_f1,0.8513965044551064
+51,SVM/Linear SVC,1,test_f1,0.8687778922073464
+52,SVM/Linear SVC,2,test_f1,0.8680392072935839
+53,SVM/Linear SVC,3,test_f1,0.878774222622803
+54,SVM/Linear SVC,4,test_f1,0.8686690096811056
+55,SVM/Linear SVC,0,test_roc_auc,0.8945277777777777
+56,SVM/Linear SVC,1,test_roc_auc,0.9053888888888889
+57,SVM/Linear SVC,2,test_roc_auc,0.905513888888889
+58,SVM/Linear SVC,3,test_roc_auc,0.9118124999999999
+59,SVM/Linear SVC,4,test_roc_auc,0.9041458333333333
+60,Logistic Regression,0,fit_time,83.40623760223389
+61,Logistic Regression,1,fit_time,80.9598958492279
+62,Logistic Regression,2,fit_time,80.50090312957764
+63,Logistic Regression,3,fit_time,83.04494118690491
+64,Logistic Regression,4,fit_time,82.33600735664368
+65,Logistic Regression,0,score_time,0.3621399402618408
+66,Logistic Regression,1,score_time,0.8576827049255371
+67,Logistic Regression,2,score_time,0.9127187728881836
+68,Logistic Regression,3,score_time,0.4680168628692627
+69,Logistic Regression,4,score_time,0.6201717853546143
+70,Logistic Regression,0,test_precision,0.8728683529875937
+71,Logistic Regression,1,test_precision,0.8923232500879352
+72,Logistic Regression,2,test_precision,0.8907577748576434
+73,Logistic Regression,3,test_precision,0.902432598577325
+74,Logistic Regression,4,test_precision,0.8951073721496569
+75,Logistic Regression,0,test_recall,0.829625
+76,Logistic Regression,1,test_recall,0.845625
+77,Logistic Regression,2,test_recall,0.8473333333333334
+78,Logistic Regression,3,test_recall,0.8563333333333333
+79,Logistic Regression,4,test_recall,0.8423333333333334
+80,Logistic Regression,0,test_f1,0.8506974856337185
+81,Logistic Regression,1,test_f1,0.8683467396885162
+82,Logistic Regression,2,test_f1,0.8685030963057868
+83,Logistic Regression,3,test_f1,0.8787788087398982
+84,Logistic Regression,4,test_f1,0.8679188580015027
+85,Logistic Regression,0,test_roc_auc,0.8946736111111112
+86,Logistic Regression,1,test_roc_auc,0.9058055555555556
+87,Logistic Regression,2,test_roc_auc,0.9063472222222222
+88,Logistic Regression,3,test_roc_auc,0.9127361111111111
+89,Logistic Regression,4,test_roc_auc,0.9047152777777779
+90,Decision Tree,0,fit_time,946.1373331546783
+91,Decision Tree,1,fit_time,883.3912105560303
+92,Decision Tree,2,fit_time,850.7174355983734
+93,Decision Tree,3,fit_time,850.5981478691101
+94,Decision Tree,4,fit_time,895.8452417850494
+95,Decision Tree,0,score_time,0.1692047119140625
+96,Decision Tree,1,score_time,0.3235015869140625
+97,Decision Tree,2,score_time,0.2744259834289551
+98,Decision Tree,3,score_time,0.2785787582397461
+99,Decision Tree,4,score_time,0.3630836009979248
+100,Decision Tree,0,test_precision,0.7157998927702396
+101,Decision Tree,1,test_precision,0.73033754400497
+102,Decision Tree,2,test_precision,0.7250663942798774
+103,Decision Tree,3,test_precision,0.7306433131445409
+104,Decision Tree,4,test_precision,0.7186623783605476
+105,Decision Tree,0,test_recall,0.7231666666666666
+106,Decision Tree,1,test_recall,0.73475
+107,Decision Tree,2,test_recall,0.7394166666666667
+108,Decision Tree,3,test_recall,0.7439166666666667
+109,Decision Tree,4,test_recall,0.7262083333333333
+110,Decision Tree,0,test_f1,0.7194644226584036
+111,Decision Tree,1,test_f1,0.7325371274275625
+112,Decision Tree,2,test_f1,0.7321712222795255
+113,Decision Tree,3,test_f1,0.7372202494012718
+114,Decision Tree,4,test_f1,0.7224156511647185
+115,Decision Tree,0,test_roc_auc,0.8137291666666667
+116,Decision Tree,1,test_roc_auc,0.8221597222222222
+117,Decision Tree,2,test_roc_auc,0.8229791666666667
+118,Decision Tree,3,test_roc_auc,0.82625
+119,Decision Tree,4,test_roc_auc,0.8157222222222222

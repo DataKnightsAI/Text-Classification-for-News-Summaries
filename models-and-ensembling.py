@@ -27,6 +27,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.model_selection import cross_validate
 from sklearn.metrics import precision_score, recall_score, roc_auc_score
 from sklearn.metrics import make_scorer
+from sklearn.ensemble import StackingClassifier
 
 # %% [markdown]
 # ## Read in the data
@@ -314,28 +315,151 @@ scores = scores.append(prf1_calc(dectree_model, 'DT', N_CLASSES, x_test_w2v, y_t
 # %% [markdown]
 # ## Look at Cross-Validation
 
-# %%
+# %%Create model list to iterate through for cross validation
+gnb = OneVsRestClassifier(GaussianNB())
+sv = OneVsRestClassifier(svm.LinearSVC(random_state=1))
+lreg = OneVsRestClassifier(LogisticRegression(random_state=1))
+dtree = OneVsRestClassifier(tree.DecisionTreeClassifier())
 
-clf = OneVsRestClassifier(GaussianNB())
+model_list = [gnb, sv, lreg, dtree]
+model_namelist = ['Gaussian Naive Bayes', 'SVM/Linear SVC', 'Logistic Regression', 'Decision Tree']
+
+#%% Make scoring metrics to pass cv function through
 scoring = {'precision': make_scorer(precision_score, average='micro'), 
            'recall': make_scorer(recall_score, average='micro'), 
            'f1': make_scorer(f1_score, average='micro'),
            'roc_auc': make_scorer(roc_auc_score, average='micro'),
            # 'mcc': make_scorer(matthews_corrcoef) <- cannot support multi-label
           }
+
+cv_result_entries = []
+i = 0
+
+#%% Loop cross validation through various models
+for mod in model_list:
+    metrics = cross_validate(
+        mod,
+        x_train_w2v,
+        y_train,
+        cv=5,
+        scoring = scoring,
+        return_train_score=False,
+        n_jobs=-1
+    )
+    for key in metrics.keys():
+        for fold_index, score in enumerate(metrics[key]):
+            cv_result_entries.append((model_namelist[i], fold_index, key, score))
+    i += 1
+
+
+#%% 
+cv_result_entries = pandas.read_csv('./data/cv-results.csv')
+cv_results_df = cv_result_entries
+cv_results_df.drop('Unnamed: 0', axis=1, inplace=True)
+cv_results_df.columns = ['algo', 'cv fold', 'metric', 'value']
+
+# %%
+test_df = pandas.DataFrame((cv_results_df[cv_results_df.metric.eq('fit_time')]))
+
+#%% Plot cv results
+
+# %%
+for metric_name, metric in zip(['fit_time',
+                                'test_precision',
+                                'test_recall',
+                                'test_f1',
+                                'test_roc_auc'],
+                                ['Fit Time',
+                                'Precision',
+                                'Recall',
+                                'F1 Score',
+                                'ROC AUC']):
+    sns.lineplot(x='cv fold', y='value', hue='algo',
+        data=cv_results_df[cv_results_df.metric.eq(f'{metric_name}')])
+    plt.title(f'{metric} Algo Comparison', fontsize=12)
+    plt.xlabel('CV Fold', fontsize=12)
+    plt.ylabel(f'{metric}', fontsize=12)
+    plt.xticks([0, 1, 2, 3, 4])
+    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    plt.show()
+
+
+# %% ENSEMBLE METHODS
+# STACKING
+x_train_w2v_sample = x_train_w2v.sample(
+    n = 4000, replace = False, random_state = 123
+)
+y_train_sample = train_data_df.category.sample(
+    n = 4000, replace = False, random_state = 123
+)
+y_train_sample = label_binarize(y_train_sample, classes=[1,2,3,4])
+
+estimators = [
+              ('nb', GaussianNB()),
+              ('svm', svm.LinearSVC())
+             ]
+
+sclf = OneVsRestClassifier(StackingClassifier(
+    estimators=estimators, final_estimator=LogisticRegression())
+)
+
 metrics = cross_validate(
-    clf,
-    x_train_w2v,
-    y_train,
+    sclf,
+    x_train_w2v_sample,
+    y_train_sample,
     cv=5,
     scoring = scoring,
     return_train_score=False,
     n_jobs=-1
 )
-sorted(metrics.keys())
 
 # %%
-metrics['test_f1']
+res = []
+for key in metrics.keys():
+    for fold_index, score in enumerate(metrics[key]):
+        res.append(('Stacking', fold_index, key, score))
+
+# %%
+res_df = pandas.DataFrame.from_dict(res)
+
+# %%
+res_df.columns = ['algo', 'cv fold', 'metric', 'value']
+
+# %%
+cv_results_inc_ens = pandas.concat([cv_results_df, res_df])
+
+# %% [markdown]
+# BOOSTING
+from sklearn.ensemble import BaggingClassifier
+
+sclf = OneVsRestClassifier(BaggingClassifier(
+    base_estimator=LogisticRegression())
+)
+
+metrics = cross_validate(
+    sclf,
+    x_train_w2v_sample,
+    y_train_sample,
+    cv=5,
+    scoring = scoring,
+    return_train_score=False,
+    n_jobs=-1
+)
+
+#%% 
+res = []
+for key in metrics.keys():
+    for fold_index, score in enumerate(metrics[key]):
+        res.append(('Bagging', fold_index, key, score))
+
+# %%
+res_df = pandas.DataFrame.from_dict(res)
+res_df.columns = ['algo', 'cv fold', 'metric', 'value']
+cv_results_inc_ens = pandas.concat([cv_results_inc_ens, res_df])
+
+#%% 
+# stacking_scores = prf1_calc(stacking_fit, 'STACKING', N_CLASSES, x_train_w2v, y_train)
+
 
 # %%
 # %% [markdown]
