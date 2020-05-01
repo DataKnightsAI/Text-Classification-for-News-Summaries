@@ -24,7 +24,9 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn import tree
 from sklearn.model_selection import train_test_split
-from sklearn.model_selection import KFold
+from sklearn.model_selection import cross_validate
+from sklearn.metrics import precision_score, recall_score, roc_auc_score
+from sklearn.metrics import make_scorer
 
 # %% [markdown]
 # ## Read in the data
@@ -313,16 +315,13 @@ scores = scores.append(prf1_calc(dectree_model, 'DT', N_CLASSES, x_test_w2v, y_t
 # ## Look at Cross-Validation
 
 # %%
-from sklearn.model_selection import cross_validate
-from sklearn.metrics import precision_score, recall_score, roc_auc_score
-from sklearn.metrics import make_scorer
 
 clf = OneVsRestClassifier(GaussianNB())
 scoring = {'precision': make_scorer(precision_score, average='micro'), 
            'recall': make_scorer(recall_score, average='micro'), 
            'f1': make_scorer(f1_score, average='micro'),
            'roc_auc': make_scorer(roc_auc_score, average='micro'),
-           #'mcc': make_scorer(matthews_corrcoef)
+           # 'mcc': make_scorer(matthews_corrcoef) <- cannot support multi-label
           }
 metrics = cross_validate(
     clf,
@@ -331,11 +330,45 @@ metrics = cross_validate(
     cv=5,
     scoring = scoring,
     return_train_score=False,
-    n_jobs=5
+    n_jobs=-1
 )
 sorted(metrics.keys())
 
 # %%
 metrics['test_f1']
+
+# %%
+# %% [markdown]
+# ## References - Code sample sources disclaimer:
+# Code for this project is either directly from (with some modification), 
+# or inspired by, but not limited to the following sources:
+# - Respective documentation and examples from each used API's doc/guide website
+# - Kelly Epley Naive Bayes: 
+#   https://towardsdatascience.com/naive-bayes-document-classification-in-python-e33ff50f937e
+# - MLWhiz's excellent blogs about text classification and NLP: 
+#   https://mlwhiz.com/blog/2018/12/17/text_classification/
+#   https://mlwhiz.com/blog/2019/01/17/deeplearning_nlp_preprocess/
+#   https://mlwhiz.com/blog/2019/02/08/deeplearning_nlp_conventional_methods/
+#   https://www.kaggle.com/mlwhiz/conventional-methods-for-quora-classification/
+# - Christof Henkel preprocessing: 
+#   https://www.kaggle.com/christofhenkel/how-to-preprocessing-when-using-embeddings
+# - datanizing GmbH:
+#   https://medium.com/@datanizing/modern-text-mining-with-python-part-1-of-5-introduction-cleaning-and-linguistics-647f9ec85b6a
+# - Datacamp wordcloud:
+#   https://www.datacamp.com/community/tutorials/wordcloud-python
+# - Seaborn Pydata tutorials:
+#   https://seaborn.pydata.org/introduction.html#intro-plot-customization
+# - Dipanjan S's tutorials:
+#   https://github.com/dipanjanS
+# - Analytics Vidhya:
+#   https://www.analyticsvidhya.com/blog/2018/04/a-comprehensive-guide-to-understand-and-implement-text-classification-in-python/
+# - Jason Brownlee's Feature Selection For Machine Learning in Python
+#   https://machinelearningmastery.com/feature-selection-machine-learning-python/
+# - Susan Li's Multi-class text classification with Scikit-learn:
+#   https://towardsdatascience.com/multi-class-text-classification-with-scikit-learn-12f1e60e0a9f
+# - Vadim Smolyakov Ensemble Learning to Improve Machine Learning Results:
+#   https://blog.statsbot.co/ensemble-learning-d1dcd548e936
+# - Udacity course video on Youtube UD120:
+#   https://www.youtube.com/watch?v=GdsLRKjjKLw
 
 # %%
