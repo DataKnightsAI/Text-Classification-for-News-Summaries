@@ -464,6 +464,26 @@ cv_results_inc_ens = pandas.concat([cv_results_inc_ens, res_df])
 # %%
 cv_results_inc_ens.to_csv('./data/cv-results-inc-ens.csv')
 
+# %%
+for metric_name, metric in zip(['fit_time',
+                                'test_precision',
+                                'test_recall',
+                                'test_f1',
+                                'test_roc_auc'],
+                                ['Fit Time',
+                                'Precision',
+                                'Recall',
+                                'F1 Score',
+                                'ROC AUC']):
+    sns.lineplot(x='cv fold', y='value', hue='algo',
+        data=cv_results_inc_ens[cv_results_inc_ens.metric.eq(f'{metric_name}')])
+    plt.title(f'{metric} Algo Comparison', fontsize=12)
+    plt.xlabel('CV Fold', fontsize=12)
+    plt.ylabel(f'{metric}', fontsize=12)
+    plt.xticks([0, 1, 2, 3, 4])
+    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    plt.show()
+
 #%% 
 # stacking_scores = prf1_calc(stacking_fit, 'STACKING', N_CLASSES, x_train_w2v, y_train)
 
