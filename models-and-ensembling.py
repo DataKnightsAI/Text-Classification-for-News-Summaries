@@ -28,6 +28,12 @@ from sklearn.model_selection import cross_validate
 from sklearn.metrics import precision_score, recall_score, roc_auc_score
 from sklearn.metrics import make_scorer
 from sklearn.ensemble import StackingClassifier
+from sklearn.ensemble import BaggingClassifier
+
+# %% [markdown]
+# ## Define Constants
+W2V_FEATURE_SIZE = 300
+N_CLASSES = 4
 
 # %% [markdown]
 # ## Read in the data
@@ -57,13 +63,11 @@ test_data_df
 # %% [markdown]
 # #### Train & Test data where x is the predictor features, y is the predicted feature
 
-N_CLASSES = 4
-
 x_train = train_data_df.content_cleaned
-y_train = label_binarize(train_data_df.category, classes=[1, 2, 3, 4])
+y_train = label_binarize(train_data_df.category, classes=range(1, N_CLASSES))
 
 x_test = test_data_df.content_cleaned
-y_test = label_binarize(test_data_df.category, classes=[1, 2, 3, 4])
+y_test = label_binarize(test_data_df.category, classes=range(1, N_CLASSES))
 
 # %% [markdown]
 # ### Load word2vec data
@@ -126,15 +130,24 @@ def averaged_word_vectorizer(corpus, model, num_features):
 # #### Obtain document level embeddings
 
 # %%
-FEATURE_SIZE = 300
-
 w2v_feature_array_train = averaged_word_vectorizer(corpus=tokenized_corpus_train,
-    model=w2v_model_train, num_features=FEATURE_SIZE)
+    model=w2v_model_train, num_features=W2V_FEATURE_SIZE)
 w2v_feature_array_test = averaged_word_vectorizer(corpus=tokenized_corpus_test,
-    model=w2v_model_train, num_features=FEATURE_SIZE)
+    model=w2v_model_train, num_features=W2V_FEATURE_SIZE)
 
 x_train_w2v = pandas.DataFrame(w2v_feature_array_train)
 x_test_w2v = pandas.DataFrame(w2v_feature_array_test)
+
+# %% [markdown]
+# #### Sample down for speed, for now.
+x_train_w2v_sample = x_train_w2v #.sample(
+    #n = 4000, replace = False, random_state = 123
+#)
+y_train_sample = train_data_df.category #.sample(
+    #n = 4000, replace = False, random_state = 123
+#)
+y_train_sample = label_binarize(y_train_sample, classes=range(1, N_CLASSES))
+
 
 # %% [markdown]
 # ## Build Models
@@ -386,13 +399,6 @@ for metric_name, metric in zip(['fit_time',
 
 # %% ENSEMBLE METHODS
 # STACKING
-x_train_w2v_sample = x_train_w2v.sample(
-    n = 4000, replace = False, random_state = 123
-)
-y_train_sample = train_data_df.category.sample(
-    n = 4000, replace = False, random_state = 123
-)
-y_train_sample = label_binarize(y_train_sample, classes=[1,2,3,4])
 
 estimators = [
               ('nb', GaussianNB()),
@@ -429,9 +435,7 @@ res_df.columns = ['algo', 'cv fold', 'metric', 'value']
 cv_results_inc_ens = pandas.concat([cv_results_df, res_df])
 
 # %% [markdown]
-# BOOSTING
-from sklearn.ensemble import BaggingClassifier
-
+# BAGGING
 sclf = OneVsRestClassifier(BaggingClassifier(
     base_estimator=LogisticRegression())
 )
@@ -456,6 +460,9 @@ for key in metrics.keys():
 res_df = pandas.DataFrame.from_dict(res)
 res_df.columns = ['algo', 'cv fold', 'metric', 'value']
 cv_results_inc_ens = pandas.concat([cv_results_inc_ens, res_df])
+
+# %%
+cv_results_inc_ens.to_csv('./data/cv-results-inc-ens.csv')
 
 #%% 
 # stacking_scores = prf1_calc(stacking_fit, 'STACKING', N_CLASSES, x_train_w2v, y_train)
