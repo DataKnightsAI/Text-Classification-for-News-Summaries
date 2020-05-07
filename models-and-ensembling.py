@@ -461,6 +461,38 @@ res_df = pandas.DataFrame.from_dict(res)
 res_df.columns = ['algo', 'cv fold', 'metric', 'value']
 cv_results_inc_ens = pandas.concat([cv_results_inc_ens, res_df])
 
+# %% [markdown]
+# BOOSTING
+from sklearn.ensemble import AdaBoostClassifier
+sclf = OneVsRestClassifier(AdaBoostClassifier(
+    random_state=123)
+)
+
+metrics = cross_validate(
+    sclf,
+    x_train_w2v_sample,
+    y_train_sample,
+    cv=5,
+    scoring = scoring,
+    return_train_score=False,
+    n_jobs=-1
+)
+
+# %%
+tempdf = cv_results_inc_ens[:-30]
+cv_results_inc_ens = tempdf.reset_index()
+
+#%% 
+res = []
+for key in metrics.keys():
+    for fold_index, score in enumerate(metrics[key]):
+        res.append(('AdaBoost', fold_index, key, score))
+
+# %%
+res_df = pandas.DataFrame.from_dict(res)
+res_df.columns = ['algo', 'cv fold', 'metric', 'value']
+cv_results_inc_ens = pandas.concat([cv_results_inc_ens, res_df])
+
 # %%
 cv_results_inc_ens.to_csv('./data/cv-results-inc-ens.csv')
 
