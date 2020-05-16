@@ -285,7 +285,7 @@ def prf1_plot(precision, recall, average_precision, algo_name, n_classes):
     plt.show()
 
 # %% [markdown]
-# ## Run the Models
+# ## Run the Base Models
 
 # %%
 # Run SVM Model
@@ -329,7 +329,7 @@ scores = scores.append(prf1_calc(dectree_model, 'DT', N_CLASSES, x_test_w2v, y_t
 # %% [markdown]
 # ## Look at Cross-Validation
 
-# %%Create model list to iterate through for cross validation
+# %% Create model list to iterate through for cross validation
 gnb = OneVsRestClassifier(GaussianNB())
 sv = OneVsRestClassifier(svm.LinearSVC(random_state=RANDOM_STATE))
 lreg = OneVsRestClassifier(LogisticRegression(random_state=RANDOM_STATE))
@@ -338,7 +338,7 @@ dtree = OneVsRestClassifier(tree.DecisionTreeClassifier())
 model_list = [gnb, sv, lreg, dtree]
 model_namelist = ['Gaussian Naive Bayes', 'SVM/Linear SVC', 'Logistic Regression', 'Decision Tree']
 
-#%% Make scoring metrics to pass cv function through
+# %% Make scoring metrics to pass cv function through
 scoring = {'precision': make_scorer(precision_score, average='micro'), 
            'recall': make_scorer(recall_score, average='micro'), 
            'f1': make_scorer(f1_score, average='micro'),
@@ -349,7 +349,7 @@ scoring = {'precision': make_scorer(precision_score, average='micro'),
 cv_result_entries = []
 i = 0
 
-#%% Loop cross validation through various models
+# %% Loop cross validation through various models and generate results
 for mod in model_list:
     metrics = cross_validate(
         mod,
@@ -366,18 +366,14 @@ for mod in model_list:
     i += 1
 
 
-#%% 
-cv_result_entries = pandas.read_csv('./data/cv-results.csv')
+# %% 
+#cv_result_entries = pandas.read_csv('./data/cv-results.csv')
 cv_results_df = cv_result_entries
-cv_results_df.drop('Unnamed: 0', axis=1, inplace=True)
+#cv_results_df.drop('Unnamed: 0', axis=1, inplace=True)
 cv_results_df.columns = ['algo', 'cv fold', 'metric', 'value']
+#test_df = pandas.DataFrame((cv_results_df[cv_results_df.metric.eq('fit_time')]))
 
-# %%
-test_df = pandas.DataFrame((cv_results_df[cv_results_df.metric.eq('fit_time')]))
-
-#%% Plot cv results
-
-# %%
+# %% Plot cv results
 for metric_name, metric in zip(['fit_time',
                                 'test_precision',
                                 'test_recall',
@@ -398,9 +394,11 @@ for metric_name, metric in zip(['fit_time',
     plt.show()
 
 
-# %% ENSEMBLE METHODS
-# STACKING
+# %% [markdown]
+# ## Ensemble Methods
 
+# %% [markdown]
+# ### Stacking
 estimators = [
               ('nb', GaussianNB()),
               ('svm', svm.LinearSVC())
@@ -428,15 +426,11 @@ for key in metrics.keys():
 
 # %%
 res_df = pandas.DataFrame.from_dict(res)
-
-# %%
 res_df.columns = ['algo', 'cv fold', 'metric', 'value']
-
-# %%
 cv_results_inc_ens = pandas.concat([cv_results_df, res_df])
 
 # %% [markdown]
-# BAGGING
+# ### Bagging
 sclf = OneVsRestClassifier(BaggingClassifier(
     base_estimator=LogisticRegression())
 )
@@ -463,7 +457,7 @@ res_df.columns = ['algo', 'cv fold', 'metric', 'value']
 cv_results_inc_ens = pandas.concat([cv_results_inc_ens, res_df])
 
 # %% [markdown]
-# BOOSTING
+# ### Boosting
 from sklearn.ensemble import AdaBoostClassifier
 sclf = OneVsRestClassifier(AdaBoostClassifier(
     random_state=RANDOM_STATE)
@@ -493,7 +487,8 @@ cv_results_inc_ens = pandas.concat([cv_results_inc_ens, res_df])
 # %%
 cv_results_inc_ens.to_csv('./data/cv-results-inc-ens.csv')
 
-# %%
+# %% [markdown]
+# ### Plot the results including ensembling
 for metric_name, metric in zip(['fit_time',
                                 'test_precision',
                                 'test_recall',
