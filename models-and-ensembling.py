@@ -34,6 +34,7 @@ from sklearn.ensemble import BaggingClassifier
 # ## Define Constants
 W2V_FEATURE_SIZE = 300
 N_CLASSES = 4
+RANDOM_STATE = 123
 
 # %% [markdown]
 # ## Read in the data
@@ -140,12 +141,12 @@ x_test_w2v = pandas.DataFrame(w2v_feature_array_test)
 
 # %% [markdown]
 # #### Sample down for speed, for now.
-x_train_w2v_sample = x_train_w2v #.sample(
-    #n = 4000, replace = False, random_state = 123
-#)
-y_train_sample = train_data_df.category #.sample(
-    #n = 4000, replace = False, random_state = 123
-#)
+x_train_w2v_sample = x_train_w2v.sample(
+    n = 30000, replace = False, random_state = RANDOM_STATE
+)
+y_train_sample = train_data_df.category.sample(
+    n = 30000, replace = False, random_state = RANDOM_STATE
+)
 y_train_sample = label_binarize(y_train_sample, classes=range(1, N_CLASSES))
 
 
@@ -155,14 +156,14 @@ y_train_sample = label_binarize(y_train_sample, classes=range(1, N_CLASSES))
 # %% [markdown]
 # ### SVM Model Building Function
 def run_svm(x_train, y_train):
-    classifier = OneVsRestClassifier(svm.LinearSVC(random_state=1))
+    classifier = OneVsRestClassifier(svm.LinearSVC(random_state=RANDOM_STATE))
     classifier.fit(x_train, y_train)
     return classifier
 
 # %% [markdown]
 # ### Logistic Regression Model Building Function
 def run_logreg(x_train, y_train):
-    classifier = OneVsRestClassifier(LogisticRegression(random_state=1))
+    classifier = OneVsRestClassifier(LogisticRegression(random_state=RANDOM_STATE))
     classifier.fit(x_train, y_train)
     return classifier
 
@@ -330,8 +331,8 @@ scores = scores.append(prf1_calc(dectree_model, 'DT', N_CLASSES, x_test_w2v, y_t
 
 # %%Create model list to iterate through for cross validation
 gnb = OneVsRestClassifier(GaussianNB())
-sv = OneVsRestClassifier(svm.LinearSVC(random_state=1))
-lreg = OneVsRestClassifier(LogisticRegression(random_state=1))
+sv = OneVsRestClassifier(svm.LinearSVC(random_state=RANDOM_STATE))
+lreg = OneVsRestClassifier(LogisticRegression(random_state=RANDOM_STATE))
 dtree = OneVsRestClassifier(tree.DecisionTreeClassifier())
 
 model_list = [gnb, sv, lreg, dtree]
@@ -465,7 +466,7 @@ cv_results_inc_ens = pandas.concat([cv_results_inc_ens, res_df])
 # BOOSTING
 from sklearn.ensemble import AdaBoostClassifier
 sclf = OneVsRestClassifier(AdaBoostClassifier(
-    random_state=123)
+    random_state=RANDOM_STATE)
 )
 
 metrics = cross_validate(
@@ -477,10 +478,6 @@ metrics = cross_validate(
     return_train_score=False,
     n_jobs=-1
 )
-
-# %%
-tempdf = cv_results_inc_ens[:-30]
-cv_results_inc_ens = tempdf.reset_index()
 
 #%% 
 res = []
@@ -516,9 +513,6 @@ for metric_name, metric in zip(['fit_time',
     plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     plt.show()
 
-#%% 
-# stacking_scores = prf1_calc(stacking_fit, 'STACKING', N_CLASSES, x_train_w2v, y_train)
-
 
 # %%
 # %% [markdown]
@@ -553,5 +547,3 @@ for metric_name, metric in zip(['fit_time',
 #   https://blog.statsbot.co/ensemble-learning-d1dcd548e936
 # - Udacity course video on Youtube UD120:
 #   https://www.youtube.com/watch?v=GdsLRKjjKLw
-
-# %%
