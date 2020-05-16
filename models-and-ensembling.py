@@ -13,12 +13,12 @@ import sqlite3
 from sklearn.multiclass import OneVsRestClassifier
 from matplotlib import pyplot as plt
 import seaborn as sns
-from sklearn.metrics import precision_recall_curve # The average precision score in multi-label settings
+from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import average_precision_score
 from sklearn.metrics import f1_score
 from sklearn.metrics import matthews_corrcoef
 from sklearn.metrics import precision_recall_fscore_support
-from sklearn import svm # Support Vector Machine
+from sklearn import svm
 from itertools import cycle
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
@@ -29,6 +29,9 @@ from sklearn.metrics import precision_score, recall_score, roc_auc_score
 from sklearn.metrics import make_scorer
 from sklearn.ensemble import StackingClassifier
 from sklearn.ensemble import BaggingClassifier
+from sklearn import tree
+import lime
+import lime.lime_tabular
 
 # %% [markdown]
 # ## Define Constants
@@ -47,8 +50,10 @@ RANDOM_STATE = 123
 
 # %%
 dbconn = sqlite3.connect('./data/cleanedtraintest_v2.db')
-train_data_df = pandas.read_sql_query('SELECT category, content_cleaned FROM train_data', dbconn)
-test_data_df = pandas.read_sql_query('SELECT category, content_cleaned FROM test_data', dbconn)
+train_data_df = pandas.read_sql_query(
+    'SELECT category, content_cleaned FROM train_data', dbconn)
+test_data_df = pandas.read_sql_query(
+    'SELECT category, content_cleaned FROM test_data', dbconn)
 dbconn.commit()
 dbconn.close()
 
@@ -141,13 +146,13 @@ x_test_w2v = pandas.DataFrame(w2v_feature_array_test)
 
 # %% [markdown]
 # #### Sample down for speed, for now.
-x_train_w2v_sample = x_train_w2v.sample(
-    n = 30000, replace = False, random_state = RANDOM_STATE
+x_train_w2v = x_train_w2v.sample(
+    n = 3000, replace = False, random_state = RANDOM_STATE
 )
-y_train_sample = train_data_df.category.sample(
-    n = 30000, replace = False, random_state = RANDOM_STATE
+y_train = train_data_df.category.sample(
+    n = 3000, replace = False, random_state = RANDOM_STATE
 )
-y_train_sample = label_binarize(y_train_sample, classes=range(1, N_CLASSES))
+y_train = label_binarize(y_train, classes=range(1, N_CLASSES))
 
 
 # %% [markdown]
@@ -336,7 +341,10 @@ lreg = OneVsRestClassifier(LogisticRegression(random_state=RANDOM_STATE))
 dtree = OneVsRestClassifier(tree.DecisionTreeClassifier())
 
 model_list = [gnb, sv, lreg, dtree]
-model_namelist = ['Gaussian Naive Bayes', 'SVM/Linear SVC', 'Logistic Regression', 'Decision Tree']
+model_namelist = ['Gaussian Naive Bayes',
+                  'SVM/Linear SVC', 
+                  'Logistic Regression', 
+                  'Decision Tree']
 
 # %% Make scoring metrics to pass cv function through
 scoring = {'precision': make_scorer(precision_score, average='micro'), 
@@ -410,8 +418,8 @@ sclf = OneVsRestClassifier(StackingClassifier(
 
 metrics = cross_validate(
     sclf,
-    x_train_w2v_sample,
-    y_train_sample,
+    x_train_w2v,
+    y_train,
     cv=5,
     scoring = scoring,
     return_train_score=False,
@@ -437,15 +445,15 @@ sclf = OneVsRestClassifier(BaggingClassifier(
 
 metrics = cross_validate(
     sclf,
-    x_train_w2v_sample,
-    y_train_sample,
+    x_train_w2v,
+    y_train,
     cv=5,
     scoring = scoring,
     return_train_score=False,
     n_jobs=-1
 )
 
-#%% 
+# %% 
 res = []
 for key in metrics.keys():
     for fold_index, score in enumerate(metrics[key]):
@@ -465,15 +473,15 @@ sclf = OneVsRestClassifier(AdaBoostClassifier(
 
 metrics = cross_validate(
     sclf,
-    x_train_w2v_sample,
-    y_train_sample,
+    x_train_w2v,
+    y_train,
     cv=5,
     scoring = scoring,
     return_train_score=False,
     n_jobs=-1
 )
 
-#%% 
+# %% 
 res = []
 for key in metrics.keys():
     for fold_index, score in enumerate(metrics[key]):
@@ -508,8 +516,6 @@ for metric_name, metric in zip(['fit_time',
     plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     plt.show()
 
-
-# %%
 # %% [markdown]
 # ## References - Code sample sources disclaimer:
 # Code for this project is either directly from (with some modification), 
