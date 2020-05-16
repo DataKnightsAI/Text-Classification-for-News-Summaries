@@ -25,14 +25,15 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn import tree
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import cross_validate
-from sklearn.metrics import precision_score, recall_score, roc_auc_score, plot_confusion_matrix 
+from sklearn.metrics import precision_score, recall_score, roc_auc_score
+from sklearn.metrics import multilabel_confusion_matrix, confusion_matrix
 from sklearn.metrics import make_scorer
 from sklearn.ensemble import StackingClassifier
 from sklearn.ensemble import BaggingClassifier
 from sklearn import tree
 import lime
 import lime.lime_tabular
-from mlxtend.plotting import plot_learning_curves, plot_decision_regions
+from mlxtend.plotting import plot_learning_curves
 
 
 # %% [markdown]
@@ -421,20 +422,28 @@ for model in model_list:
 #%% Get predictions
 y_test_pred = []
 for model in model_list:
+    #y_test_pred.append(numpy.argmax(model.predict(x_test_w2v), axis=1).astype('int8'))
     y_test_pred.append(model.predict(x_test_w2v))
 # Un-binarize
 
 
 #%% CONFUSION MATRIX PATRICK & ALEX
+CLASSES = ['World', 'Sports', 'Business', 'Sci/Tech']
 i=0
 model_list_temp = [sv, lreg, dtree]
 for model in model_list_temp:
-    plot_confusion_matrix(model, x_test_w2v, y_test_pred[i])
-                #figsize=fig_size_tuple, title_fontsize=title_fontsize_num, text_fontsize=10, title='Confusion Matrix for ' + model_name)
-    plt.title('Confusion Matrix for ' + model_namelist[i], fontsize=14)
-    plt.xlabel('Predicted Label', fontsize=12)
-    plt.ylabel('True Label', fontsize=12)
-    plt.show()
+    cm = confusion_matrix(numpy.argmax(y_test, axis=1),
+                          numpy.argmax(y_test_pred[i], axis=1))
+        #figsize=fig_size_tuple, title_fontsize=title_fontsize_num, text_fontsize=10, title='Confusion Matrix for ' + model_name)
+    # plt.title('Confusion Matrix for ' + model_namelist[i], fontsize=14)
+    # plt.xlabel('Predicted Label', fontsize=12)
+    # plt.ylabel('True Label', fontsize=12)
+    # plt.show()
+    cm_df = pandas.DataFrame(cm, index = CLASSES,
+                  columns = CLASSES)
+    cm_df.index.name = 'Actual'
+    cm_df.columns.name = 'Predicted'
+    sns.heatmap(cm_df, annot=True, fmt='.4g', annot_kws={"size": 10})
     i += 1
 
 # %% [markdown]
