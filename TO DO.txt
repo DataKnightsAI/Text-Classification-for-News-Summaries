@@ -1,0 +1,10 @@
+1. Change to box plots
+2. Get confusion matrix
+3. Hyperparameter tuning
+4. LIME
+5. General cleanup
+6. Independent Learning
+
+------------------------------
+ILP Topic? 
+LIME?

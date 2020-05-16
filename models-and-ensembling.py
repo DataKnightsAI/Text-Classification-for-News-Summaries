@@ -25,13 +25,15 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn import tree
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import cross_validate
-from sklearn.metrics import precision_score, recall_score, roc_auc_score
+from sklearn.metrics import precision_score, recall_score, roc_auc_score, plot_confusion_matrix 
 from sklearn.metrics import make_scorer
 from sklearn.ensemble import StackingClassifier
 from sklearn.ensemble import BaggingClassifier
 from sklearn import tree
 import lime
 import lime.lime_tabular
+from mlxtend.plotting import plot_learning_curves, plot_decision_regions
+
 
 # %% [markdown]
 # ## Define Constants
@@ -70,10 +72,10 @@ test_data_df
 # #### Train & Test data where x is the predictor features, y is the predicted feature
 
 x_train = train_data_df.content_cleaned
-y_train = label_binarize(train_data_df.category, classes=range(1, N_CLASSES))
+y_train = label_binarize(train_data_df.category, classes=range(N_CLASSES))
 
 x_test = test_data_df.content_cleaned
-y_test = label_binarize(test_data_df.category, classes=range(1, N_CLASSES))
+y_test = label_binarize(test_data_df.category, classes=range(N_CLASSES))
 
 # %% [markdown]
 # ### Load word2vec data
@@ -152,7 +154,7 @@ x_train_w2v = x_train_w2v.sample(
 y_train = train_data_df.category.sample(
     n = 3000, replace = False, random_state = RANDOM_STATE
 )
-y_train = label_binarize(y_train, classes=range(1, N_CLASSES))
+y_train = label_binarize(y_train, classes=range(N_CLASSES))
 
 
 # %% [markdown]
@@ -376,7 +378,7 @@ for mod in model_list:
 
 # %% 
 #cv_result_entries = pandas.read_csv('./data/cv-results.csv')
-cv_results_df = cv_result_entries
+cv_results_df = pandas.DataFrame(cv_result_entries)
 #cv_results_df.drop('Unnamed: 0', axis=1, inplace=True)
 cv_results_df.columns = ['algo', 'cv fold', 'metric', 'value']
 #test_df = pandas.DataFrame((cv_results_df[cv_results_df.metric.eq('fit_time')]))
@@ -392,15 +394,48 @@ for metric_name, metric in zip(['fit_time',
                                 'Recall',
                                 'F1 Score',
                                 'ROC AUC']):
-    sns.lineplot(x='cv fold', y='value', hue='algo',
+    sns.boxplot(x='algo', y='value', #hue='algo',
         data=cv_results_df[cv_results_df.metric.eq(f'{metric_name}')])
+    sns.stripplot(x='algo', y = 'value', 
+        data = cv_results_df[cv_results_df.metric.eq(f'{metric_name}')],
+        size = 5, linewidth = 1)
     plt.title(f'{metric} Algo Comparison', fontsize=12)
-    plt.xlabel('CV Fold', fontsize=12)
+    plt.xlabel('Algorithm', fontsize=12)
     plt.ylabel(f'{metric}', fontsize=12)
     plt.xticks([0, 1, 2, 3, 4])
-    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    plt.xticks(rotation=45)
+    #plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     plt.show()
 
+# %% FROM PATRICK & ALEX
+i=0
+for model in model_list:
+    plt.figure()
+    plot_learning_curves(x_train_w2v, y_train, x_test_w2v, y_test, model)
+    plt.title('Learning Curve for ' + model_namelist[i], fontsize=14)
+    plt.xlabel('Training Set Size (%)', fontsize=12)
+    plt.ylabel('Misclassification Error', fontsize=12)
+    plt.show()
+    i += 1
+
+#%% Get predictions
+y_test_pred = []
+for model in model_list:
+    y_test_pred.append(model.predict(x_test_w2v))
+# Un-binarize
+
+
+#%% CONFUSION MATRIX PATRICK & ALEX
+i=0
+model_list_temp = [sv, lreg, dtree]
+for model in model_list_temp:
+    plot_confusion_matrix(model, x_test_w2v, y_test_pred[i])
+                #figsize=fig_size_tuple, title_fontsize=title_fontsize_num, text_fontsize=10, title='Confusion Matrix for ' + model_name)
+    plt.title('Confusion Matrix for ' + model_namelist[i], fontsize=14)
+    plt.xlabel('Predicted Label', fontsize=12)
+    plt.ylabel('True Label', fontsize=12)
+    plt.show()
+    i += 1
 
 # %% [markdown]
 # ## Ensemble Methods
