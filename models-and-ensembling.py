@@ -408,7 +408,7 @@ for metric_name, metric in zip(['fit_time',
     #plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     plt.show()
 
-# %% FROM PATRICK & ALEX
+# %% Misclassification Errors FROM PATRICK & ALEX
 i=0
 for model in model_list:
     plt.figure()
@@ -419,31 +419,24 @@ for model in model_list:
     plt.show()
     i += 1
 
-#%% Get predictions
+# %% Get predictions
 y_test_pred = []
 for model in model_list:
-    #y_test_pred.append(numpy.argmax(model.predict(x_test_w2v), axis=1).astype('int8'))
     y_test_pred.append(model.predict(x_test_w2v))
-# Un-binarize
 
-
-#%% CONFUSION MATRIX PATRICK & ALEX
+# %% Confusion Matrix
 CLASSES = ['World', 'Sports', 'Business', 'Sci/Tech']
 i=0
 model_list_temp = [sv, lreg, dtree]
-for model in model_list_temp:
+for _ in model_list_temp:
     cm = confusion_matrix(numpy.argmax(y_test, axis=1),
                           numpy.argmax(y_test_pred[i], axis=1))
-        #figsize=fig_size_tuple, title_fontsize=title_fontsize_num, text_fontsize=10, title='Confusion Matrix for ' + model_name)
-    # plt.title('Confusion Matrix for ' + model_namelist[i], fontsize=14)
-    # plt.xlabel('Predicted Label', fontsize=12)
-    # plt.ylabel('True Label', fontsize=12)
-    # plt.show()
-    cm_df = pandas.DataFrame(cm, index = CLASSES,
-                  columns = CLASSES)
+    cm_df = pandas.DataFrame(cm, index = CLASSES, columns = CLASSES)
     cm_df.index.name = 'Actual'
     cm_df.columns.name = 'Predicted'
-    sns.heatmap(cm_df, annot=True, fmt='.4g', annot_kws={"size": 10})
+    plt.title('Confusion Matrix for ' + model_namelist[i], fontsize=14)
+    sns.heatmap(cm_df, annot=True, fmt='.6g', annot_kws={"size": 10})
+    plt.show()
     i += 1
 
 # %% [markdown]
