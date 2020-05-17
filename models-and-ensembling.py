@@ -427,15 +427,14 @@ for model in model_list:
 # %% Confusion Matrix
 CLASSES = ['World', 'Sports', 'Business', 'Sci/Tech']
 i=0
-model_list_temp = [sv, lreg, dtree]
-for _ in model_list_temp:
+for _ in model_list:
     cm = confusion_matrix(numpy.argmax(y_test, axis=1),
                           numpy.argmax(y_test_pred[i], axis=1))
     cm_df = pandas.DataFrame(cm, index = CLASSES, columns = CLASSES)
     cm_df.index.name = 'Actual'
     cm_df.columns.name = 'Predicted'
     plt.title('Confusion Matrix for ' + model_namelist[i], fontsize=14)
-    sns.heatmap(cm_df, annot=True, fmt='.6g', annot_kws={"size": 10})
+    sns.heatmap(cm_df, annot=True, fmt='.6g', annot_kws={"size": 10}, cmap='Reds')
     plt.show()
     i += 1
 
