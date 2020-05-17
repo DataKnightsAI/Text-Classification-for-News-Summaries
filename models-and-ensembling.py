@@ -445,7 +445,7 @@ N_FOLDS = 5
 
 #%% 
 #Objective Function
-def objective(params, n_folds = N_FOLDS):
+'''def objective(params, n_folds = N_FOLDS):
 
     cv_results = cross_validate(OneVsRestClassifier(GaussianNB()),
         x_train_w2v,
@@ -457,14 +457,15 @@ def objective(params, n_folds = N_FOLDS):
         n_jobs=-1
     )
 
-    # Extract the best score
-    best_score = max(cv_results['f1'])
-    
-    # Loss must be minimized
-    loss = 1 - best_score
-    
-    # Dictionary with information for evaluation
-    return {'loss': loss, 'params': params, 'status': STATUS_OK}
+
+# Extract the best score
+best_score = max(cv_results['f1'])
+
+# Loss must be minimized
+loss = 1 - best_score
+
+# Dictionary with information for evaluation
+return {'loss': loss, 'params': params, 'status': STATUS_OK}
 
 # %%
 #Domain Space
@@ -472,6 +473,8 @@ from hyperopt import hp
 
 space = {'var_smoothing': hp.loguniform('var_smoothing', 
                           numpy.log(1.e+00), numpy.log(1.e-09))}
+
+# obj function
 
 
 #%%
@@ -493,8 +496,10 @@ from hyperopt import fmin
 MAX_EVALS = 500
 
 # Optimize
-best = fmin(fn = objective, space = space, algo = tpe.suggest, 
-            max_evals = MAX_EVALS, trials = bayes_trials)
+best = fmin(fn = var_smoothing, space = space, algo = tpe.suggest, 
+            max_evals = 100, trials = bayes_trials)
+
+print(best)'''
 
 # %% [markdown]
 # ## Ensemble Methods

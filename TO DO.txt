@@ -1,6 +1,6 @@
 1. Change to box plots - DONE
 2. Get confusion matrix - DONE
-3. Hyperparameter tuning
+3. Hyperparameter tuning (https://github.com/hyperopt/hyperopt/wiki/FMin)
 4. LIME
 5. General cleanup
 6. Independent Learning
