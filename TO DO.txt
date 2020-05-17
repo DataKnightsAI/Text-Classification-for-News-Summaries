@@ -1,5 +1,5 @@
-1. Change to box plots
-2. Get confusion matrix
+1. Change to box plots - DONE
+2. Get confusion matrix - DONE
 3. Hyperparameter tuning
 4. LIME
 5. General cleanup

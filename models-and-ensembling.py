@@ -438,6 +438,64 @@ for _ in model_list:
     plt.show()
     i += 1
 
+#%% HYPER PARAMETER TUNING
+from hyperopt import STATUS_OK
+
+N_FOLDS = 5
+
+#%% 
+#Objective Function
+def objective(params, n_folds = N_FOLDS):
+
+    cv_results = cross_validate(OneVsRestClassifier(GaussianNB()),
+        x_train_w2v,
+        y_train,
+        cv = n_folds,
+        fit_params= params,
+        scoring = {'f1': make_scorer(f1_score, average='micro')},
+        return_train_score=False,
+        n_jobs=-1
+    )
+
+    # Extract the best score
+    best_score = max(cv_results['f1'])
+    
+    # Loss must be minimized
+    loss = 1 - best_score
+    
+    # Dictionary with information for evaluation
+    return {'loss': loss, 'params': params, 'status': STATUS_OK}
+
+# %%
+#Domain Space
+from hyperopt import hp
+
+space = {'var_smoothing': hp.loguniform('var_smoothing', 
+                          numpy.log(1.e+00), numpy.log(1.e-09))}
+
+
+#%%
+# Optimization Algorithm
+from hyperopt import tpe
+
+tpe_algo = tpe.suggest
+
+#%% 
+# Results History
+from hyperopt import Trials
+
+bayes_trials = Trials()
+
+#%%
+# Run the optimization
+from hyperopt import fmin
+
+MAX_EVALS = 500
+
+# Optimize
+best = fmin(fn = objective, space = space, algo = tpe.suggest, 
+            max_evals = MAX_EVALS, trials = bayes_trials)
+
 # %% [markdown]
 # ## Ensemble Methods
 
@@ -529,7 +587,7 @@ res_df.columns = ['algo', 'cv fold', 'metric', 'value']
 cv_results_inc_ens = pandas.concat([cv_results_inc_ens, res_df])
 
 # %%
-cv_results_inc_ens.to_csv('./data/cv-results-inc-ens.csv')
+#cv_results_inc_ens.to_csv('./data/cv-results-inc-ens.csv')
 
 # %% [markdown]
 # ### Plot the results including ensembling
@@ -584,3 +642,7 @@ for metric_name, metric in zip(['fit_time',
 #   https://blog.statsbot.co/ensemble-learning-d1dcd548e936
 # - Udacity course video on Youtube UD120:
 #   https://www.youtube.com/watch?v=GdsLRKjjKLw
+# - Hyperparameter Tuning with Hyperopt
+#   https://towardsdatascience.com/automated-machine-learning-hyperparameter-tuning-in-python-dfda59b72f8a 
+# - Hyperparameter Tuning for Gaussian NB
+#   https://www.quora.com/Can-the-prior-in-a-naive-Bayes-be-considered-a-hyperparameter-and-tuned-for-better-accuracy
