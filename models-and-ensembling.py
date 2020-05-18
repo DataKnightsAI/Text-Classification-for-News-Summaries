@@ -503,7 +503,7 @@ print(best)'''
 # %%
 from sklearn.model_selection import GridSearchCV
 
-params = {'estimator__var_smoothing': [1.e-09, 
+params_gnb = {'estimator__var_smoothing': [1.e-09, 
                                     1.e-08, 
                                     1.e-07,
                                     1.e-06,
@@ -515,13 +515,35 @@ params = {'estimator__var_smoothing': [1.e-09,
                                     1.e+00]}
 
 clf = GridSearchCV(estimator=gnb,
-                   param_grid=params,
+                   param_grid=params_gnb,
                    scoring='f1_micro',
                    n_jobs=-1,
                    cv=5,
                    return_train_score=True
                   )
 clf_res = clf.fit(x_train_w2v, y_train)
+print('Best Score: ', clf_res.best_score_)
+print('Best Params: ', clf_res.best_params_)
+
+#%%
+C = [0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000]
+
+params_lreg = {
+"estimator__penalty": ['l1', 'l2'],
+"estimator__C":C,
+"estimator__class_weight":[{1:0.5, 0:0.5}, {1:0.4, 0:0.6}, {1:0.6, 0:0.4}, {1:0.7, 0:0.3}],
+"estimator__solver": ["newton-cg", "sag", "saga", "lbfgs"]}
+
+clf = GridSearchCV(estimator=lreg,
+                   param_grid=params_lreg,
+                   scoring='f1_micro',
+                   n_jobs=-1,
+                   cv=5,
+                   return_train_score=True
+                  )
+clf_res = clf.fit(x_train_w2v, y_train)
+print('Best score:', clf_res.best_score_)
+print('Best Params:', clf_res.best_params_)
 
 # %% [markdown]
 # ## Ensemble Methods
