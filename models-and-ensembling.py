@@ -31,10 +31,10 @@ from sklearn.metrics import make_scorer
 from sklearn.ensemble import StackingClassifier
 from sklearn.ensemble import BaggingClassifier
 from sklearn import tree
+from sklearn.model_selection import GridSearchCV
+from mlxtend.plotting import plot_learning_curves
 import lime
 import lime.lime_tabular
-from mlxtend.plotting import plot_learning_curves
-
 
 # %% [markdown]
 # ## Define Constants
@@ -73,10 +73,10 @@ test_data_df
 # #### Train & Test data where x is the predictor features, y is the predicted feature
 
 x_train = train_data_df.content_cleaned
-y_train = label_binarize(train_data_df.category, classes=range(N_CLASSES))
+y_train = label_binarize(train_data_df.category, classes=range(1, N_CLASSES + 1))
 
 x_test = test_data_df.content_cleaned
-y_test = label_binarize(test_data_df.category, classes=range(N_CLASSES))
+y_test = label_binarize(test_data_df.category, classes=range(1, N_CLASSES + 1))
 
 # %% [markdown]
 # ### Load word2vec data
@@ -110,30 +110,26 @@ wpt = WordPunctTokenizer()
 tokenized_corpus_train = [wpt.tokenize(document) for document in x_train]
 tokenized_corpus_test = [wpt.tokenize(document) for document in x_test]
 
-del(x_train)
-del(x_test)
-
 # %%
 def average_word_vectors(words, model, vocabulary, num_features):
+    feature_vector = numpy.zeros((num_features,), dtype="float32")
+    nwords = 0.
 
- feature_vector = numpy.zeros((num_features,), dtype="float32")
- nwords = 0.
+    for word in words:
+        if word in vocabulary:
+            nwords = nwords + 1.
+            feature_vector = numpy.add(feature_vector, model[word])
 
- for word in words:
-    if word in vocabulary:
-      nwords = nwords + 1.
-      feature_vector = numpy.add(feature_vector, model[word])
+    if nwords:
+        feature_vector = numpy.divide(feature_vector, nwords)
 
- if nwords:
-    feature_vector = numpy.divide(feature_vector, nwords)
-
- return feature_vector
+    return feature_vector
 
 def averaged_word_vectorizer(corpus, model, num_features):
- vocabulary = set(model.wv.index2word)
- features = [average_word_vectors(tokenized_sentence, model, vocabulary, num_features)
+    vocabulary = set(model.wv.index2word)
+    features = [average_word_vectors(tokenized_sentence, model, vocabulary, num_features)
             for tokenized_sentence in corpus]
- return numpy.array(features)
+    return numpy.array(features)
 
 # %% [markdown]
 # #### Obtain document level embeddings
@@ -155,8 +151,23 @@ x_train_w2v = x_train_w2v.sample(
 y_train = train_data_df.category.sample(
     n = 3000, replace = False, random_state = RANDOM_STATE
 )
-y_train = label_binarize(y_train, classes=range(N_CLASSES))
+y_train = label_binarize(y_train, classes=range(1, N_CLASSES + 1))
 
+# %% [markdown]
+# #### Delete variables we don't need anymore to save memory
+del(w2v_feature_array_test)
+del(w2v_feature_array_train)
+del(w2v_model_train)
+del(w2v_test_features_array_dict)
+del(w2v_train_features_array_dict)
+del(tokenized_corpus_test)
+del(tokenized_corpus_train)
+del(wpt)
+del(train_data_df)
+del(test_data_df)
+del(x_train)
+del(x_test)
+del(data)
 
 # %% [markdown]
 # ## Build Models
@@ -438,15 +449,12 @@ for _ in model_list:
     plt.show()
     i += 1
 
-#%% HYPER PARAMETER TUNING
-from hyperopt import STATUS_OK
-
+# %% HYPER PARAMETER TUNING BY HYPEROPT (not working)
+'''from hyperopt import STATUS_OK
 N_FOLDS = 5
-
 #%% 
 #Objective Function
-'''def objective(params, n_folds = N_FOLDS):
-
+def objective(params, n_folds = N_FOLDS):
     cv_results = cross_validate(OneVsRestClassifier(GaussianNB()),
         x_train_w2v,
         y_train,
@@ -456,64 +464,44 @@ N_FOLDS = 5
         return_train_score=False,
         n_jobs=-1
     )
-
     # Extract the best score
     best_score = max(cv_results['test_f1'])
-
     # Loss must be minimized
     loss = 1 - best_score
-
     # Dictionary with information for evaluation
     return {'loss': loss, 'params': params, 'status': STATUS_OK}
-
 # %%
 #Domain Space
 from hyperopt import hp
-
 space = {'estimator__var_smoothing': hp.uniform('estimator__var_smoothing', 
                           1.e-09, 1.e+00)}
-
 #%%
 # Optimization Algorithm
 from hyperopt import tpe
-
 tpe_algo = tpe.suggest
-
 #%% 
 # Results History
 from hyperopt import Trials
-
 bayes_trials = Trials()
-
 #%%
 # Run the optimization
 from hyperopt import fmin
 from hyperopt import rand
-
 MAX_EVALS = 500
-
 params = space
-
 # Optimize
 best = fmin(fn = objective, space = space, algo = tpe.suggest, 
             max_evals = 100, trials = bayes_trials)
-
 print(best)'''
 
-# %%
-from sklearn.model_selection import GridSearchCV
+# %% [markdown]
+# ## Hyper-parameter tuning with exhaustive Grid Search
 
-params_gnb = {'estimator__var_smoothing': [1.e-09, 
-                                    1.e-08, 
-                                    1.e-07,
-                                    1.e-06,
-                                    1.e-05,
-                                    1.e-04,
-                                    1.e-03,
-                                    1.e-02,
-                                    1.e-01,
-                                    1.e+00]}
+# ### Tune hyperparameters for Gaussian Naive-Bayes
 
+params_gnb = {'estimator__var_smoothing': [1.e-09, 1.e-08, 1.e-07, 1.e-06, 1.e-05,
+                                           1.e-04, 1.e-03, 1.e-02, 1.e-01, 1.e+00]
+}
 clf = GridSearchCV(estimator=gnb,
                    param_grid=params_gnb,
                    scoring='f1_micro',
@@ -525,13 +513,16 @@ clf_res = clf.fit(x_train_w2v, y_train)
 print('Best Score: ', clf_res.best_score_)
 print('Best Params: ', clf_res.best_params_)
 
-#%%
-params_lreg = {
-"estimator__penalty": ['l1', 'l2'],
-"estimator__C": [0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000],
-#"estimator__class_weight":[{1:0.5, 0:0.5}, {1:0.4, 0:0.6}, {1:0.6, 0:0.4}, {1:0.7, 0:0.3}],
-"estimator__solver": ["newton-cg", "sag", "saga", "lbfgs"]}
+# %%
+# ### Tune hyperparameters for Logistic Regression
 
+params_lreg = {
+    "estimator__penalty": ['l1', 'l2'],
+    "estimator__C": [0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000],
+    #"estimator__class_weight":[{1:0.5, 0:0.5}, {1:0.4, 0:0.6},
+    #                           {1:0.6, 0:0.4}, {1:0.7, 0:0.3}],
+    "estimator__solver": ["newton-cg", "sag", "saga", "lbfgs"]
+}
 clf = GridSearchCV(estimator=lreg,
                    param_grid=params_lreg,
                    scoring='f1_micro',
@@ -543,16 +534,18 @@ clf_res = clf.fit(x_train_w2v, y_train)
 print('Best score:', clf_res.best_score_)
 print('Best Params:', clf_res.best_params_)
 
-#%%svm gridsearch
+# %%
+# ### Tune hyperparameters for SVM (Linear SVC)
 
 params_sv = {
-"estimator__penalty":['l1', 'l2'],
-"estimator__tol": [1.e-08,1.e-07,1.e-06,1.e-05,1.e-04,1.e-03,1.e-02,1.e-01,1.e+00],
-"estimator__loss":['hinge','squared_hinge'],
-"estimator__C": [0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000]}
-#"estimator__class_weight":['None',{1:0.5, 0:0.5}, {1:0.4, 0:0.6}, {1:0.6, 0:0.4}, {1:0.7, 0:0.3}],
-
-
+    "estimator__penalty":['l1', 'l2'],
+    "estimator__tol": [1.e-08, 1.e-07, 1.e-06, 1.e-05,
+                       1.e-04, 1.e-03, 1.e-02, 1.e-01, 1.e+00],
+    "estimator__loss":['hinge','squared_hinge'],
+    "estimator__C": [0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000]
+    #"estimator__class_weight":['None',{1:0.5, 0:0.5}, 
+    #                           {1:0.4, 0:0.6}, {1:0.6, 0:0.4}, {1:0.7, 0:0.3}],
+}
 clf = GridSearchCV(estimator=sv,
                    param_grid=params_sv,
                    scoring='f1_micro',
@@ -564,12 +557,13 @@ clf_res = clf.fit(x_train_w2v, y_train)
 print('Best score:', clf_res.best_score_)
 print('Best Params:', clf_res.best_params_)
 
-#%%dtree gridsearch
-params_dtree = {
-"estimator__splitter":["best", "random"],
-"estimator__min_samples_split":range(1, 20, 1)
-}
+# %%
+# ### Tune hyperparameters for Decision Trees
 
+params_dtree = {
+    "estimator__splitter":["best", "random"],
+    "estimator__min_samples_split":range(1, 20, 1)
+}
 clf = GridSearchCV(estimator=dtree,
                    param_grid=params_dtree,
                    scoring='f1_micro',
@@ -580,7 +574,6 @@ clf = GridSearchCV(estimator=dtree,
 clf_res = clf.fit(x_train_w2v, y_train)
 print('Best score:', clf_res.best_score_)
 print('Best Params:', clf_res.best_params_)
-
 
 # %% [markdown]
 # ## Ensemble Methods
