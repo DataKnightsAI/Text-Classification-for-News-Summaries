@@ -1,0 +1,19 @@
+Naive Bayes:
+
+from sklearn.model_selection import GridSearchCV...
+Best Score:  0.8228807252094764
+Best Params:  {'estimator__var_smoothing': 1e-09}
+
+Logistic Regression:
+
+C = [0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000]...
+Best score: 0.8596532593537785
+Best Params: {'estimator__C': 0.1, 'estimator__class_weight': {1: 0.7, 0: 0.3}, 'estimator__penalty': 'l2', 'estimator__solver': 'saga'}
+
+SVM:
+Best score: 0.8534030826645875
+Best Params: {'estimator__C': 0.01, 'estimator__class_weight': {1: 0.7, 0: 0.3}, 'estimator__loss': 'hinge', 'estimator__penalty': 'l2', 'estimator__tol': 1.0}
+
+Decision Trees:
+Best score: 0.6881240753084301
+Best Params: {'estimator__min_samples_split': 4, 'estimator__splitter': 'best'}

@@ -526,12 +526,10 @@ print('Best Score: ', clf_res.best_score_)
 print('Best Params: ', clf_res.best_params_)
 
 #%%
-C = [0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000]
-
 params_lreg = {
 "estimator__penalty": ['l1', 'l2'],
-"estimator__C":C,
-"estimator__class_weight":[{1:0.5, 0:0.5}, {1:0.4, 0:0.6}, {1:0.6, 0:0.4}, {1:0.7, 0:0.3}],
+"estimator__C": [0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000],
+#"estimator__class_weight":[{1:0.5, 0:0.5}, {1:0.4, 0:0.6}, {1:0.6, 0:0.4}, {1:0.7, 0:0.3}],
 "estimator__solver": ["newton-cg", "sag", "saga", "lbfgs"]}
 
 clf = GridSearchCV(estimator=lreg,
@@ -544,6 +542,45 @@ clf = GridSearchCV(estimator=lreg,
 clf_res = clf.fit(x_train_w2v, y_train)
 print('Best score:', clf_res.best_score_)
 print('Best Params:', clf_res.best_params_)
+
+#%%svm gridsearch
+
+params_sv = {
+"estimator__penalty":['l1', 'l2'],
+"estimator__tol": [1.e-08,1.e-07,1.e-06,1.e-05,1.e-04,1.e-03,1.e-02,1.e-01,1.e+00],
+"estimator__loss":['hinge','squared_hinge'],
+"estimator__C": [0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000]}
+#"estimator__class_weight":['None',{1:0.5, 0:0.5}, {1:0.4, 0:0.6}, {1:0.6, 0:0.4}, {1:0.7, 0:0.3}],
+
+
+clf = GridSearchCV(estimator=sv,
+                   param_grid=params_sv,
+                   scoring='f1_micro',
+                   n_jobs=-1,
+                   cv=5,
+                   return_train_score=False
+                  )
+clf_res = clf.fit(x_train_w2v, y_train)
+print('Best score:', clf_res.best_score_)
+print('Best Params:', clf_res.best_params_)
+
+#%%dtree gridsearch
+params_dtree = {
+"estimator__splitter":["best", "random"],
+"estimator__min_samples_split":range(1, 20, 1)
+}
+
+clf = GridSearchCV(estimator=dtree,
+                   param_grid=params_dtree,
+                   scoring='f1_micro',
+                   n_jobs=-1,
+                   cv=5,
+                   return_train_score=False
+                  )
+clf_res = clf.fit(x_train_w2v, y_train)
+print('Best score:', clf_res.best_score_)
+print('Best Params:', clf_res.best_params_)
+
 
 # %% [markdown]
 # ## Ensemble Methods
@@ -695,3 +732,5 @@ for metric_name, metric in zip(['fit_time',
 #   https://towardsdatascience.com/automated-machine-learning-hyperparameter-tuning-in-python-dfda59b72f8a 
 # - Hyperparameter Tuning for Gaussian NB
 #   https://www.quora.com/Can-the-prior-in-a-naive-Bayes-be-considered-a-hyperparameter-and-tuned-for-better-accuracy
+# - Hyperparameter Tuning for Decistion Trees
+#   https://towardsdatascience.com/how-to-tune-a-decision-tree-f03721801680
