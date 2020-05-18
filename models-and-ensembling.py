@@ -457,25 +457,21 @@ N_FOLDS = 5
         n_jobs=-1
     )
 
+    # Extract the best score
+    best_score = max(cv_results['test_f1'])
 
-# Extract the best score
-best_score = max(cv_results['f1'])
+    # Loss must be minimized
+    loss = 1 - best_score
 
-# Loss must be minimized
-loss = 1 - best_score
-
-# Dictionary with information for evaluation
-return {'loss': loss, 'params': params, 'status': STATUS_OK}
+    # Dictionary with information for evaluation
+    return {'loss': loss, 'params': params, 'status': STATUS_OK}
 
 # %%
 #Domain Space
 from hyperopt import hp
 
-space = {'var_smoothing': hp.loguniform('var_smoothing', 
-                          numpy.log(1.e+00), numpy.log(1.e-09))}
-
-# obj function
-
+space = {'estimator__var_smoothing': hp.uniform('estimator__var_smoothing', 
+                          1.e-09, 1.e+00)}
 
 #%%
 # Optimization Algorithm
@@ -492,14 +488,40 @@ bayes_trials = Trials()
 #%%
 # Run the optimization
 from hyperopt import fmin
+from hyperopt import rand
 
 MAX_EVALS = 500
 
+params = space
+
 # Optimize
-best = fmin(fn = var_smoothing, space = space, algo = tpe.suggest, 
+best = fmin(fn = objective, space = space, algo = tpe.suggest, 
             max_evals = 100, trials = bayes_trials)
 
 print(best)'''
+
+# %%
+from sklearn.model_selection import GridSearchCV
+
+params = {'estimator__var_smoothing': [1.e-09, 
+                                    1.e-08, 
+                                    1.e-07,
+                                    1.e-06,
+                                    1.e-05,
+                                    1.e-04,
+                                    1.e-03,
+                                    1.e-02,
+                                    1.e-01,
+                                    1.e+00]}
+
+clf = GridSearchCV(estimator=gnb,
+                   param_grid=params,
+                   scoring='f1_micro',
+                   n_jobs=-1,
+                   cv=5,
+                   return_train_score=True
+                  )
+clf_res = clf.fit(x_train_w2v, y_train)
 
 # %% [markdown]
 # ## Ensemble Methods
