@@ -41,6 +41,7 @@ import lime.lime_tabular
 W2V_FEATURE_SIZE = 300
 N_CLASSES = 4
 RANDOM_STATE = 123
+N_FOLDS = 5
 
 # %% [markdown]
 # ## Read in the data
@@ -155,19 +156,18 @@ y_train = label_binarize(y_train, classes=range(1, N_CLASSES + 1))
 
 # %% [markdown]
 # #### Delete variables we don't need anymore to save memory
-del(w2v_feature_array_test)
-del(w2v_feature_array_train)
-del(w2v_model_train)
-del(w2v_test_features_array_dict)
-del(w2v_train_features_array_dict)
-del(tokenized_corpus_test)
-del(tokenized_corpus_train)
-del(wpt)
-del(train_data_df)
-del(test_data_df)
-del(x_train)
-del(x_test)
-del(data)
+# del(w2v_feature_array_test)
+# del(w2v_feature_array_train)
+# del(w2v_test_features_array_dict)
+# del(w2v_train_features_array_dict)
+# del(tokenized_corpus_test)
+# del(tokenized_corpus_train)
+# del(wpt)
+# del(train_data_df)
+# del(test_data_df)
+# del(x_train)
+# del(x_test)
+# del(data)
 
 # %% [markdown]
 # ## Build Models
@@ -377,7 +377,7 @@ for mod in model_list:
         mod,
         x_train_w2v,
         y_train,
-        cv=5,
+        cv=N_FOLDS,
         scoring = scoring,
         return_train_score=False,
         n_jobs=-1
@@ -419,7 +419,7 @@ for metric_name, metric in zip(['fit_time',
     #plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     plt.show()
 
-# %% Misclassification Errors FROM PATRICK & ALEX
+# %% Misclassification Errors
 i=0
 for model in model_list:
     plt.figure()
@@ -506,7 +506,7 @@ clf = GridSearchCV(estimator=gnb,
                    param_grid=params_gnb,
                    scoring='f1_micro',
                    n_jobs=-1,
-                   cv=5,
+                   cv=N_FOLDS,
                    return_train_score=True
                   )
 clf_res = clf.fit(x_train_w2v, y_train)
@@ -527,7 +527,7 @@ clf = GridSearchCV(estimator=lreg,
                    param_grid=params_lreg,
                    scoring='f1_micro',
                    n_jobs=-1,
-                   cv=5,
+                   cv=N_FOLDS,
                    return_train_score=True
                   )
 clf_res = clf.fit(x_train_w2v, y_train)
@@ -550,7 +550,7 @@ clf = GridSearchCV(estimator=sv,
                    param_grid=params_sv,
                    scoring='f1_micro',
                    n_jobs=-1,
-                   cv=5,
+                   cv=N_FOLDS,
                    return_train_score=False
                   )
 clf_res = clf.fit(x_train_w2v, y_train)
@@ -568,7 +568,7 @@ clf = GridSearchCV(estimator=dtree,
                    param_grid=params_dtree,
                    scoring='f1_micro',
                    n_jobs=-1,
-                   cv=5,
+                   cv=N_FOLDS,
                    return_train_score=False
                   )
 clf_res = clf.fit(x_train_w2v, y_train)
@@ -593,7 +593,7 @@ metrics = cross_validate(
     sclf,
     x_train_w2v,
     y_train,
-    cv=5,
+    cv=N_FOLDS,
     scoring = scoring,
     return_train_score=False,
     n_jobs=-1
@@ -620,7 +620,7 @@ metrics = cross_validate(
     sclf,
     x_train_w2v,
     y_train,
-    cv=5,
+    cv=N_FOLDS,
     scoring = scoring,
     return_train_score=False,
     n_jobs=-1
@@ -648,7 +648,7 @@ metrics = cross_validate(
     sclf,
     x_train_w2v,
     y_train,
-    cv=5,
+    cv=N_FOLDS,
     scoring = scoring,
     return_train_score=False,
     n_jobs=-1
@@ -690,6 +690,38 @@ for metric_name, metric in zip(['fit_time',
     plt.show()
 
 # %% [markdown]
+# ## LIME for model interpretation
+
+# predict_fn = model_namelist
+# i = 0
+# for model in model_list:
+#     predict_fn[i] = lambda x: model.predict_proba(x).astype(float)
+#     i += 1
+
+# %%
+feature_names = list(w2v_model_train.vocab)
+
+# %%
+import lime.lime_text
+class_names=['W','S','B','T']
+explainer = lime.lime_tabular.LimeTabularExplainer(x_test_w2v.values,
+ feature_names=feature_names, mode='classification', class_names=class_names)
+
+# %%
+# use gnb (predict_fn[0]) 
+idx = 34
+exp = explainer.explain_instance(x_test_w2v.values[idx], lreg.predict_proba, num_features=20, top_labels=4)
+print('Document id: %d' % idx)
+# print('Predicted class =', class_names[lreg.predict(numpy.argmax(y_test, axis=1)[idx])])#.reshape(1,-1)[0,0]])
+# print('True class: %s' % class_names[y_test[idx]])
+
+# %%
+print ('\n'.join(map(str, exp.as_list(label=0))))
+
+# %%
+exp.show_in_notebook()
+
+# %% [markdown]
 # ## References - Code sample sources disclaimer:
 # Code for this project is either directly from (with some modification), 
 # or inspired by, but not limited to the following sources:
@@ -725,5 +757,7 @@ for metric_name, metric in zip(['fit_time',
 #   https://towardsdatascience.com/automated-machine-learning-hyperparameter-tuning-in-python-dfda59b72f8a 
 # - Hyperparameter Tuning for Gaussian NB
 #   https://www.quora.com/Can-the-prior-in-a-naive-Bayes-be-considered-a-hyperparameter-and-tuned-for-better-accuracy
-# - Hyperparameter Tuning for Decistion Trees
+# - Hyperparameter Tuning for Decision Trees
 #   https://towardsdatascience.com/how-to-tune-a-decision-tree-f03721801680
+# - Lime tutorial
+#   https://marcotcr.github.io/lime/tutorials/Lime%20-%20multiclass.html
