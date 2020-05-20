@@ -705,7 +705,7 @@ feature_names = list(w2v_model_train.vocab)
 import lime.lime_text
 class_names=['W','S','B','T']
 explainer = lime.lime_tabular.LimeTabularExplainer(x_test_w2v.values,
- feature_names=feature_names, mode='classification', class_names=class_names)
+feature_names=feature_names, mode='classification', class_names=class_names)
 
 # %%
 # use gnb (predict_fn[0]) 
@@ -731,7 +731,9 @@ print('Estimator: ' % (['Logistic Regression']))
 #labels = pipeline['pipeline'].classes_.tolist()
 #estimator = lreg
 
-IPython.display.display(eli5.show_weights(estimator = lreg top = 10, target_names = ['W','S','B','T']))
+eli5.show_weights(estimator = lreg, top = 10, target_names = ['W','S','B','T'], feature_names = x_train_w2v)
+#eli5.show_prediction(estimator = lreg, doc = x_test_w2v.values[34], target_names = ['W','S','B','T'])
+                      #target_names = ['W','S','B','T'], vec = word2vec))
 
     
 
