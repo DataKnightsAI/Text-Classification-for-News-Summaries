@@ -35,6 +35,7 @@ from sklearn.model_selection import GridSearchCV
 from mlxtend.plotting import plot_learning_curves
 import lime
 import lime.lime_tabular
+import lime.lime_text
 
 # %% [markdown]
 # ## Define Constants
@@ -387,7 +388,6 @@ for mod in model_list:
             cv_result_entries.append((model_namelist[i], fold_index, key, score))
     i += 1
 
-
 # %% 
 #cv_result_entries = pandas.read_csv('./data/cv-results.csv')
 cv_results_df = pandas.DataFrame(cv_result_entries)
@@ -691,49 +691,49 @@ for metric_name, metric in zip(['fit_time',
 
 # %% [markdown]
 # ## LIME for model interpretation
-
-# predict_fn = model_namelist
-# i = 0
-# for model in model_list:
-#     predict_fn[i] = lambda x: model.predict_proba(x).astype(float)
-#     i += 1
-
-# %%
 feature_names = list(w2v_model_train.vocab)
+class_names=['World','Sports','Business','Tech/Sci']
 
-# %%
-import lime.lime_text
-class_names=['W','S','B','T']
-explainer = lime.lime_tabular.LimeTabularExplainer(x_test_w2v.values,
- feature_names=feature_names, mode='classification', class_names=class_names)
+# Instantiate explainer
+tab_explainer = lime.lime_tabular.LimeTabularExplainer(x_train_w2v.values,
+    feature_names=feature_names, mode='classification', class_names=class_names)
 
-# %%
-# use gnb (predict_fn[0]) 
+# Get explanations for: idx = Document #
 idx = 34
-exp = explainer.explain_instance(x_test_w2v.values[idx], lreg.predict_proba, num_features=20, top_labels=4)
+tab_exp_lreg = tab_explainer.explain_instance(x_test_w2v.values[idx], lreg.predict_proba,
+    num_features=10, top_labels=1)
 print('Document id: %d' % idx)
-# print('Predicted class =', class_names[lreg.predict(numpy.argmax(y_test, axis=1)[idx])])#.reshape(1,-1)[0,0]])
-# print('True class: %s' % class_names[y_test[idx]])
+print('Predicted class =',
+    class_names[numpy.argmax(lreg.predict(numpy.array(x_test_w2v.values[idx]).reshape(1, -1)))])
+print('True class =', class_names[numpy.argmax(y_test[idx])])
 
 # %%
-print ('\n'.join(map(str, exp.as_list(label=0))))
+# Get a text-only explanation
+print ('\n'.join(map(str, tab_exp_lreg.as_list(label=numpy.argmax(y_test[idx])))))
 
 # %%
-exp.show_in_notebook()
+# Get a graphical explanation of the predicted class
+fig = tab_exp_lreg.as_pyplot_figure(label=numpy.argmax(y_test[idx]))
 
-#%% ELI 5
-import eli5
-import sklearn.pipeline
-import IPython
+# %%
+# Get a graphical explanation with class probabilities
+tab_exp_lreg.show_in_notebook()
 
-#for pipeline in pipelines:
-print('Estimator: ' % (['Logistic Regression']))
-#labels = pipeline['pipeline'].classes_.tolist()
-#estimator = lreg
+# %%
+attempt_idx = feature_names.index('attempt')
+tab_explainer.feature_frequencies[attempt_idx]
+tab_explainer.training_data_stats()
 
-IPython.display.display(eli5.show_weights(estimator = lreg top = 10, target_names = ['W','S','B','T']))
 
-    
+# %%
+# # %%
+# text_explainer = lime.lime_text.LimeTextExplainer(x_test_w2v.values,
+#     class_names=class_names)
+# # %%
+# exp2 = text_explainer.explain_instance(x_test_w2v.values[idx], dtree.predict,
+#     num_features=20, top_labels=4)
+# # %%
+# exp2.show_in_notebook()
 
 
 # %% [markdown]
@@ -776,5 +776,3 @@ IPython.display.display(eli5.show_weights(estimator = lreg top = 10, target_name
 #   https://towardsdatascience.com/how-to-tune-a-decision-tree-f03721801680
 # - Lime tutorial
 #   https://marcotcr.github.io/lime/tutorials/Lime%20-%20multiclass.html
-# - ELI5
-#   https://towardsdatascience.com/3-ways-to-interpretate-your-nlp-model-to-management-and-customer-5428bc07ce15
