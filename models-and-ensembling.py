@@ -653,7 +653,7 @@ cv_results_inc_ens = pandas.concat([cv_results_inc_ens, res_df])
 print(res_df)
 
 # %% [markdown]
-# ### Plot the results including ensembling
+# ### Plot cv results
 for metric_name, metric in zip(['fit_time',
                                 'test_precision',
                                 'test_recall',
@@ -664,18 +664,21 @@ for metric_name, metric in zip(['fit_time',
                                 'Recall',
                                 'F1 Score',
                                 'ROC AUC']):
-    sns.lineplot(x='cv fold', y='value', hue='algo',
+    sns.boxplot(x='algo', y='value', #hue='algo',
         data=cv_results_inc_ens[cv_results_inc_ens.metric.eq(f'{metric_name}')])
+    sns.stripplot(x='algo', y = 'value', 
+        data = cv_results_inc_ens[cv_results_inc_ens.metric.eq(f'{metric_name}')],
+        size = 5, linewidth = 1)
     plt.title(f'{metric} Algo Comparison', fontsize=12)
-    plt.xlabel('CV Fold', fontsize=12)
+    plt.xlabel('Algorithm', fontsize=12)
     plt.ylabel(f'{metric}', fontsize=12)
     plt.xticks([0, 1, 2, 3, 4])
-    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    plt.xticks(rotation=45)
     plt.show()
 
 # %% [markdown]
 # ## Save our results
-# cv_results_inc_ens.to_csv('./data/cv-results-inc-ens.csv')
+cv_results_inc_ens.to_csv('./data/cv-results-inc-ens.csv')
 
 # %% [markdown]
 # ## LIME for model interpretation
