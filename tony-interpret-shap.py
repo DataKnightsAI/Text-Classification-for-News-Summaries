@@ -24,6 +24,7 @@ import seaborn as sns
 #from sklearn.metrics import average_precision_score
 from sklearn import svm
 from sklearn import tree
+from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import label_binarize
 from sklearn.model_selection import train_test_split
 from sklearn.multiclass import OneVsRestClassifier
@@ -107,6 +108,7 @@ x_test_tfidf = np.round(x_test_tfidf, 2)
 x_train_tfidf_ngram = pd.DataFrame(x_train_tfidf.toarray(), columns = vocab)
 x_test_tfidf_ngram = pd.DataFrame(x_test_tfidf.toarray(), columns = vocab)
 
+
 # %% [markdown]
 # ## Build the model by running the data through an algo
 
@@ -132,18 +134,16 @@ def run_dectree(x_train, y_train):
 # Run Decision Trees Classifier
 dectree_model = run_dectree(x_train_tfidf_ngram, y_train)
 
+def run_logreg(x_train, y_train):
+    classifier = OneVsRestClassifier(LogisticRegression(random_state=RANDOM_STATE))
+    classifier.fit(x_train, y_train)
+    return classifier
+
+logreg_model = run_logreg(x_train_tfidf_ngram, y_train)
+
 # %% 
 # ### Confusion Matrix
 y_test_pred = svm_model.predict(x_test_tfidf_ngram)
-# cm = confusion_matrix(np.argmax(y_test, axis=1),
-#                         np.argmax(y_test_pred, axis=1))
-# cm_df = pd.DataFrame(cm, index = CLASSES, columns = CLASSES)
-# cm_df.index.name = 'Actual'
-# cm_df.columns.name = 'Predicted'
-# plt.title('Confusion Matrix for ' + "SVC", fontsize=14)
-# sns.heatmap(cm_df, annot=True, fmt='.6g', annot_kws={"size": 10}, cmap='Reds')
-# plt.show()
-
 cm = confusion_matrix(y_test, y_test_pred)
 cm_df = pd.DataFrame(cm, index = CLASSES, columns = CLASSES)
 cm_df.index.name = 'Actual'
@@ -152,19 +152,29 @@ plt.title('Confusion Matrix for ' + "SVC", fontsize=14)
 sns.heatmap(cm_df, annot=True, fmt='.6g', annot_kws={"size": 10}, cmap='Reds')
 plt.show()
 
+# %%
+attrib_data = shap.sample(x_train_tfidf_ngram, 20)
+explainer = shap.KernelExplainer(logreg_model.predict_proba, attrib_data)
+shap_vals = explainer.shap_values(x_test_tfidf_ngram)
+# %%
+shap.summary_plot(shap_vals, feature_names=vocab, class_names=CLASSES)
+# %%
+shap.decision_plot(explainer.expected_value[0], shap_vals[0][1], feature_names=vocab,
+    feature_display_range=slice(None, -31, -1))
+
 # %% [markdown]
-# ## Use SHAP to interpret our results!
-attrib_data = x_train_tfidf_ngram[:6]
+## Use SHAP to interpret our results!
+#attrib_data = x_train_tfidf_ngram[:200]
+attrib_data = shap.sample(x_train_tfidf_ngram, nsamples=10)
 explainer = shap.KernelExplainer(svm_model.decision_function, attrib_data)
 
 # %%
 num_explanations = 5
 shap_vals = explainer.shap_values(x_test_tfidf_ngram)
-# word_lookup = list()
-# for word in vocab:
-#   word_lookup.append(word)
-# word_lookup = [''] + word_lookup
-# shap.summary_plot(shap_vals, feature_names=word_lookup, class_names=CLASSES)
+
+# %%
+shap.decision_plot(explainer.expected_value[0], shap_vals[0][100], feature_names=vocab,
+    feature_display_range=slice(None, -31, -1))
 
 # %%
 shap.force_plot(explainer.expected_value[0], shap_vals[0][0,:],
@@ -177,13 +187,43 @@ shap.summary_plot(shap_vals, feature_names=vocab, class_names=CLASSES)
 shap.summary_plot(shap_vals, feature_names=vocab, plot_type="bar")
 
 # %%
-shap.force_plot(explainer.expected_value, shap_vals[0,:], x_test_tfidf_ngram.iloc[0,:])
+shap.force_plot(explainer.expected_value[2], shap_vals[2][0,:],
+    x_test_tfidf_ngram.iloc[0,:])
+
+# %% THIS WORKS!!!!
+shap.decision_plot(explainer.expected_value[0], shap_vals[0][100], feature_names=vocab,
+    feature_display_range=slice(None, -31, -1))
+
+# %%
+shap.multioutput_decision_plot(explainer.expected_value, shap_vals, row_index=0)
+
+# %%
+import warnings
+explainer = shap.TreeExplainer(dectree_model, model_output='probability', feature_perturbation='interventional')
+expected_value = explainer.expected_value
+if isinstance(expected_value, list):
+    expected_value = expected_value[0]
+print(f"Explainer expected value: {expected_value}")
+
+select = range(20)
+features = x_test_tfidf_ngram.iloc[select]
+#features_display = X_display.loc[features.index]
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    shap_values = explainer.shap_values(features, check_additivity=False)[0]
+    shap_interaction_values = explainer.shap_interaction_values(features)
+if isinstance(shap_interaction_values, list):
+    shap_interaction_values = shap_interaction_values[1]
+
+# %%
+shap.decision_plot(expected_value, shap_values, vocab)
 
 # %% TRY ON TREE
 explainer2 = shap.TreeExplainer(dectree_model)
 
 # %%
-shap_vals2 = explainer.shap_values(x_test_tfidf_ngram)
+shap_vals2 = explainer2.shap_values(x_test_tfidf_ngram, check_additivity=False)
 
 # %%
 shap.force_plot(explainer2.expected_value[0], shap_vals2[0][0,:],
@@ -196,17 +236,46 @@ shap.summary_plot(shap_vals2, feature_names=vocab, class_names=CLASSES)
 shap.summary_plot(shap_vals2, feature_names=vocab, plot_type="bar")
 
 # %%
-expected_value = shap_vals2[0][0, -1]
-shap_values = shap_vals2[:, -1]
-shap.initjs()  
- 
-shap.force_plot(expected_value, shap_values[10, :], x_test_tfidf_ngram.iloc[10, :])
+row_index = 0
+shap.multioutput_decision_plot(list(explainer2.expected_value), shap_vals2,
+                               row_index=row_index, 
+                               feature_names=vocab, 
+                               highlight=y_test[row_index]-1)
 
 # %%
-# ALIBI
-# pred_fcn = svm_model.decision_function
-# svm_explainer = KernelShap(pred_fcn)
-# svm_explainer.fit(X_train_norm)
+shap.decision_plot(explainer2.expected_value[0], shap_vals2[0][1], feature_names=vocab,
+    feature_display_range=slice(None, -31, -1))
+
+# %%
+shap.initjs()  
+ 
+shap.force_plot(explainer2.expected_value[0], shap_vals2[0][10], x_test_tfidf_ngram.iloc[10, :])
+
+# # %% [markdown]
+# # ## ALIBI for interpretation
+# import alibi
+# from sklearn.metrics import accuracy_score
+# from alibi.explainers import AnchorText
+# from alibi.explainers import KernelShap
+# # from alibi.datasets import fetch_movie_sentiment
+
+# # %%
+# pred_fcn = svm_model.predict
+# svm_explainer = KernelShap(pred_fcn, link='raw', feature_names=vocab)
+# svm_explainer.fit(x_train_tfidf_ngram, summarise_background=True)
+
+# #%%
+# explainer = KernelShap(predict_fn, link='logit', feature_names=vocab)
+
+# # %%
+# import warnings
+# with warnings.catch_warnings():
+#     warnings.simplefilter("ignore")
+#     explainer.fit(x_test_tfidf_ngram, summarise_background=True)
+
+# # %%
+# explanation = explainer.explain(np.array(x_test_tfidf_ngram.iloc[0, :]).reshape(1,-1))
+
 
 # %% [markdown]
 # # References
@@ -216,3 +285,9 @@ shap.force_plot(expected_value, shap_values[10, :], x_test_tfidf_ngram.iloc[10, 
 #   https://christophm.github.io/interpretable-ml-book/
 # - Kernel SHAP explanation for SVM models - Seldon Technologies Ltd, 2019
 #   https://docs.seldon.io/projects/alibi/en/stable/examples/kernel_shap_wine_intro.html
+# - A Unified Approach to Interpreting Model Predictions - Scott M. Lundberg & Su-In Lee
+#   http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions
+# - 17 January 2020, From local explanations to global understanding with explainable AI for trees
+#   https://www.nature.com/articles/s42256-019-0138-9
+# - 10 October 2018, Explainable machine-learning predictions for the prevention of hypoxaemia during surgery
+#   https://www.nature.com/articles/s41551-018-0304-0 
