@@ -1,5 +1,5 @@
 # %% [markdown]
-# # Models and Ensembling Methods
+# # Models and Ensembling Methods + Interpretability with LIME
 
 # %% [markdown]
 # ## Import dependencies
@@ -53,7 +53,6 @@ N_FOLDS = 5
 # %% [markdown]
 # #### Load in the data from the database
 
-# %%
 dbconn = sqlite3.connect('./data/cleanedtraintest_v2.db')
 train_data_df = pandas.read_sql_query(
     'SELECT category, content_cleaned FROM train_data', dbconn)
@@ -112,7 +111,6 @@ wpt = WordPunctTokenizer()
 tokenized_corpus_train = [wpt.tokenize(document) for document in x_train]
 tokenized_corpus_test = [wpt.tokenize(document) for document in x_test]
 
-# %%
 def average_word_vectors(words, model, vocabulary, num_features):
     feature_vector = numpy.zeros((num_features,), dtype="float32")
     nwords = 0.
@@ -135,8 +133,6 @@ def averaged_word_vectorizer(corpus, model, num_features):
 
 # %% [markdown]
 # #### Obtain document level embeddings
-
-# %%
 w2v_feature_array_train = averaged_word_vectorizer(corpus=tokenized_corpus_train,
     model=w2v_model_train, num_features=W2V_FEATURE_SIZE)
 w2v_feature_array_test = averaged_word_vectorizer(corpus=tokenized_corpus_test,
@@ -146,34 +142,18 @@ x_train_w2v = pandas.DataFrame(w2v_feature_array_train)
 x_test_w2v = pandas.DataFrame(w2v_feature_array_test)
 
 # %% [markdown]
-# #### Sample down for speed, for now.
-x_train_w2v = x_train_w2v.sample(
-    n = 3000, replace = False, random_state = RANDOM_STATE
-)
-y_train = train_data_df.category.sample(
-    n = 3000, replace = False, random_state = RANDOM_STATE
-)
-y_train = label_binarize(y_train, classes=range(1, N_CLASSES + 1))
-
-# %% [markdown]
-# #### Delete variables we don't need anymore to save memory
-# del(w2v_feature_array_test)
-# del(w2v_feature_array_train)
-# del(w2v_test_features_array_dict)
-# del(w2v_train_features_array_dict)
-# del(tokenized_corpus_test)
-# del(tokenized_corpus_train)
-# del(wpt)
-# del(train_data_df)
-# del(test_data_df)
-# del(x_train)
-# del(x_test)
-# del(data)
+# #### Sample down for speed, for now. (use when testing)
+# x_train_w2v = x_train_w2v.sample(
+#     n = 3000, replace = False, random_state = RANDOM_STATE
+# )
+# y_train = train_data_df.category.sample(
+#     n = 3000, replace = False, random_state = RANDOM_STATE
+# )
+# y_train = label_binarize(y_train, classes=range(1, N_CLASSES + 1))
 
 # %% [markdown]
 # ## Build Models
 
-# %% [markdown]
 # ### SVM Model Building Function
 def run_svm(x_train, y_train):
     classifier = OneVsRestClassifier(svm.LinearSVC(random_state=RANDOM_STATE))
@@ -307,49 +287,50 @@ def prf1_plot(precision, recall, average_precision, algo_name, n_classes):
 # %% [markdown]
 # ## Run the Base Models
 
-# %%
-# Run SVM Model
+# %% [markdown]
+# ### Run SVM Model
 svm_model = run_svm(x_train_w2v, y_train)
 
-# %%
-# Run Logistic Regression Model
+# %% [markdown]
+# ### Run Logistic Regression Model
 logreg_model = run_logreg(x_train_w2v, y_train)
 
-# %% 
-# Run Naive Bayes Classifier
+# %% [markdown]
+# ### Run Naive Bayes Classifier
 nb_model = run_nb(x_train_w2v, y_train)
 
-# %%
-# Run Decision Trees Classifier
+# %% [markdown]
+# ### Run Decision Trees Classifier
 dectree_model = run_dectree(x_train_w2v, y_train)
 
 # %% [markdown]
 # ## Get the scores
 
-# %%
-# Initialize the dataframe to keep track of the scores
+# %% [markdown]
+# ### Initialize the dataframe to keep track of the scores
 scores = pandas.DataFrame()
 
-# %% 
-# Precision, Recall, Avg. Precision for SVM
+# %% [markdown]
+# ### Precision, Recall, Avg. Precision for SVM
 scores = scores.append(prf1_calc(svm_model, 'SVM', N_CLASSES, x_test_w2v, y_test))
 
-# %% 
-# Precision, Recall, Avg. Precision for LOG REG
+# %% [markdown]
+# ### Precision, Recall, Avg. Precision for LOG REG
 scores = scores.append(prf1_calc(logreg_model, 'LOGREG', N_CLASSES, x_test_w2v, y_test))
 
-# %% 
-# Precision, Recall, Avg. Precision for Naive Bayes
+# %% [markdown]
+# ### Precision, Recall, Avg. Precision for Naive Bayes
 scores = scores.append(prf1_calc(nb_model, 'NB', N_CLASSES, x_test_w2v, y_test))
 
-# %% 
-# Precision, Recall, Avg. Precision for Decision Trees
+# %% [markdown]
+# ### Precision, Recall, Avg. Precision for Decision Trees
 scores = scores.append(prf1_calc(dectree_model, 'DT', N_CLASSES, x_test_w2v, y_test))
 
 # %% [markdown]
 # ## Look at Cross-Validation
 
-# %% Create model list to iterate through for cross validation
+# %% [markdown]
+# ### Create model list to iterate through for cross validation
 gnb = OneVsRestClassifier(GaussianNB())
 sv = OneVsRestClassifier(svm.LinearSVC(random_state=RANDOM_STATE))
 lreg = OneVsRestClassifier(LogisticRegression(random_state=RANDOM_STATE))
@@ -361,7 +342,8 @@ model_namelist = ['Gaussian Naive Bayes',
                   'Logistic Regression', 
                   'Decision Tree']
 
-# %% Make scoring metrics to pass cv function through
+# %% [markdown]
+# ### Make scoring metrics to pass cv function through
 scoring = {'precision': make_scorer(precision_score, average='micro'), 
            'recall': make_scorer(recall_score, average='micro'), 
            'f1': make_scorer(f1_score, average='micro'),
@@ -372,7 +354,8 @@ scoring = {'precision': make_scorer(precision_score, average='micro'),
 cv_result_entries = []
 i = 0
 
-# %% Loop cross validation through various models and generate results
+# %% [markdown]
+# ### Loop cross validation through various models and generate results
 for mod in model_list:
     metrics = cross_validate(
         mod,
@@ -388,14 +371,13 @@ for mod in model_list:
             cv_result_entries.append((model_namelist[i], fold_index, key, score))
     i += 1
 
-# %% 
-#cv_result_entries = pandas.read_csv('./data/cv-results.csv')
+# %% [markdown]
+# ### Save the cv results to a dataframe
 cv_results_df = pandas.DataFrame(cv_result_entries)
-#cv_results_df.drop('Unnamed: 0', axis=1, inplace=True)
 cv_results_df.columns = ['algo', 'cv fold', 'metric', 'value']
-#test_df = pandas.DataFrame((cv_results_df[cv_results_df.metric.eq('fit_time')]))
 
-# %% Plot cv results
+# %% [markdown]
+# ### Plot cv results
 for metric_name, metric in zip(['fit_time',
                                 'test_precision',
                                 'test_recall',
@@ -416,10 +398,10 @@ for metric_name, metric in zip(['fit_time',
     plt.ylabel(f'{metric}', fontsize=12)
     plt.xticks([0, 1, 2, 3, 4])
     plt.xticks(rotation=45)
-    #plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     plt.show()
 
-# %% Misclassification Errors
+# %% [markdown]
+# ### Misclassification Errors
 i=0
 for model in model_list:
     plt.figure()
@@ -430,12 +412,14 @@ for model in model_list:
     plt.show()
     i += 1
 
-# %% Get predictions
+# %% [markdown]
+# ### Get predictions
 y_test_pred = []
 for model in model_list:
     y_test_pred.append(model.predict(x_test_w2v))
 
-# %% Confusion Matrix
+# %% [markdown]
+# ### Confusion Matrix
 CLASSES = ['World', 'Sports', 'Business', 'Sci/Tech']
 i=0
 for _ in model_list:
@@ -449,56 +433,56 @@ for _ in model_list:
     plt.show()
     i += 1
 
-# %% HYPER PARAMETER TUNING BY HYPEROPT (not working)
-'''from hyperopt import STATUS_OK
-N_FOLDS = 5
-#%% 
-#Objective Function
-def objective(params, n_folds = N_FOLDS):
-    cv_results = cross_validate(OneVsRestClassifier(GaussianNB()),
-        x_train_w2v,
-        y_train,
-        cv = n_folds,
-        fit_params= params,
-        scoring = {'f1': make_scorer(f1_score, average='micro')},
-        return_train_score=False,
-        n_jobs=-1
-    )
-    # Extract the best score
-    best_score = max(cv_results['test_f1'])
-    # Loss must be minimized
-    loss = 1 - best_score
-    # Dictionary with information for evaluation
-    return {'loss': loss, 'params': params, 'status': STATUS_OK}
-# %%
-#Domain Space
-from hyperopt import hp
-space = {'estimator__var_smoothing': hp.uniform('estimator__var_smoothing', 
-                          1.e-09, 1.e+00)}
-#%%
+# %% [markdown]
+# ## HYPER PARAMETER TUNING BY HYPEROPT (not working!!!)
+
+# from hyperopt import STATUS_OK
+# N_FOLDS = 5
+# #%% 
+# #Objective Function
+# def objective(params, n_folds = N_FOLDS):
+#     cv_results = cross_validate(OneVsRestClassifier(GaussianNB()),
+#         x_train_w2v,
+#         y_train,
+#         cv = n_folds,
+#         fit_params= params,
+#         scoring = {'f1': make_scorer(f1_score, average='micro')},
+#         return_train_score=False,
+#         n_jobs=-1
+#     )
+#     # Extract the best score
+#     best_score = max(cv_results['test_f1'])
+#     # Loss must be minimized
+#     loss = 1 - best_score
+#     # Dictionary with information for evaluation
+#     return {'loss': loss, 'params': params, 'status': STATUS_OK}
+# Domain Space
+# from hyperopt import hp
+# space = {'estimator__var_smoothing': hp.uniform('estimator__var_smoothing', 
+#                           1.e+00, 1.e-09)}
+# #%%
 # Optimization Algorithm
-from hyperopt import tpe
-tpe_algo = tpe.suggest
-#%% 
+# from hyperopt import tpe
+# tpe_algo = tpe.suggest
+# #%% 
 # Results History
-from hyperopt import Trials
-bayes_trials = Trials()
-#%%
+# from hyperopt import Trials
+# bayes_trials = Trials()
+# #%%
 # Run the optimization
-from hyperopt import fmin
-from hyperopt import rand
-MAX_EVALS = 500
-params = space
+# from hyperopt import fmin
+# from hyperopt import rand
+# MAX_EVALS = 500
+# params = space
 # Optimize
-best = fmin(fn = objective, space = space, algo = tpe.suggest, 
-            max_evals = 100, trials = bayes_trials)
-print(best)'''
+# best = fmin(fn = objective, space = space, algo = tpe.suggest, 
+#             max_evals = 100, trials = bayes_trials)
+# print(best)
 
 # %% [markdown]
 # ## Hyper-parameter tuning with exhaustive Grid Search
 
 # ### Tune hyperparameters for Gaussian Naive-Bayes
-
 params_gnb = {'estimator__var_smoothing': [1.e-09, 1.e-08, 1.e-07, 1.e-06, 1.e-05,
                                            1.e-04, 1.e-03, 1.e-02, 1.e-01, 1.e+00]
 }
@@ -513,7 +497,7 @@ clf_res = clf.fit(x_train_w2v, y_train)
 print('Best Score: ', clf_res.best_score_)
 print('Best Params: ', clf_res.best_params_)
 
-# %%
+# %% [markdown]
 # ### Tune hyperparameters for Logistic Regression
 
 params_lreg = {
@@ -534,7 +518,7 @@ clf_res = clf.fit(x_train_w2v, y_train)
 print('Best score:', clf_res.best_score_)
 print('Best Params:', clf_res.best_params_)
 
-# %%
+# %% [markdown]
 # ### Tune hyperparameters for SVM (Linear SVC)
 
 params_sv = {
@@ -557,7 +541,7 @@ clf_res = clf.fit(x_train_w2v, y_train)
 print('Best score:', clf_res.best_score_)
 print('Best Params:', clf_res.best_params_)
 
-# %%
+# %% [markdown]
 # ### Tune hyperparameters for Decision Trees
 
 params_dtree = {
@@ -574,6 +558,12 @@ clf = GridSearchCV(estimator=dtree,
 clf_res = clf.fit(x_train_w2v, y_train)
 print('Best score:', clf_res.best_score_)
 print('Best Params:', clf_res.best_params_)
+
+# %% [markdown]
+# ### Conclusion: 
+# Apparently the best params are pretty much the default ones.  
+# The algorithms are already pretty smart about the defaults or can calculate them.
+# This tuning these hyper-parameters might actually cause overfitting.
 
 # %% [markdown]
 # ## Ensemble Methods
@@ -599,16 +589,15 @@ metrics = cross_validate(
     n_jobs=-1
 )
 
-# %%
 res = []
 for key in metrics.keys():
     for fold_index, score in enumerate(metrics[key]):
         res.append(('Stacking', fold_index, key, score))
 
-# %%
 res_df = pandas.DataFrame.from_dict(res)
 res_df.columns = ['algo', 'cv fold', 'metric', 'value']
 cv_results_inc_ens = pandas.concat([cv_results_df, res_df])
+print(res_df)
 
 # %% [markdown]
 # ### Bagging
@@ -626,16 +615,15 @@ metrics = cross_validate(
     n_jobs=-1
 )
 
-# %% 
 res = []
 for key in metrics.keys():
     for fold_index, score in enumerate(metrics[key]):
         res.append(('Bagging', fold_index, key, score))
 
-# %%
 res_df = pandas.DataFrame.from_dict(res)
 res_df.columns = ['algo', 'cv fold', 'metric', 'value']
 cv_results_inc_ens = pandas.concat([cv_results_inc_ens, res_df])
+print(res_df)
 
 # %% [markdown]
 # ### Boosting
@@ -654,19 +642,15 @@ metrics = cross_validate(
     n_jobs=-1
 )
 
-# %% 
 res = []
 for key in metrics.keys():
     for fold_index, score in enumerate(metrics[key]):
         res.append(('AdaBoost', fold_index, key, score))
 
-# %%
 res_df = pandas.DataFrame.from_dict(res)
 res_df.columns = ['algo', 'cv fold', 'metric', 'value']
 cv_results_inc_ens = pandas.concat([cv_results_inc_ens, res_df])
-
-# %%
-#cv_results_inc_ens.to_csv('./data/cv-results-inc-ens.csv')
+print(res_df)
 
 # %% [markdown]
 # ### Plot the results including ensembling
@@ -690,15 +674,20 @@ for metric_name, metric in zip(['fit_time',
     plt.show()
 
 # %% [markdown]
+# ## Save our results
+# cv_results_inc_ens.to_csv('./data/cv-results-inc-ens.csv')
+
+# %% [markdown]
 # ## LIME for model interpretation
-feature_names = list(w2v_model_train.vocab)
 class_names=['World','Sports','Business','Tech/Sci']
 
-# Instantiate explainer
+# %% [markdown]
+# #### Instantiate explainer
 tab_explainer = lime.lime_tabular.LimeTabularExplainer(x_train_w2v.values,
-    feature_names=feature_names, mode='classification', class_names=class_names)
+    mode='classification', class_names=class_names)
 
-# Get explanations for: idx = Document #
+# %% [markdown]
+# #### Get explanations for: idx = Document #
 idx = 34
 tab_exp_lreg = tab_explainer.explain_instance(x_test_w2v.values[idx], lreg.predict_proba,
     num_features=10, top_labels=1)
@@ -707,34 +696,17 @@ print('Predicted class =',
     class_names[numpy.argmax(lreg.predict(numpy.array(x_test_w2v.values[idx]).reshape(1, -1)))])
 print('True class =', class_names[numpy.argmax(y_test[idx])])
 
-# %%
-# Get a text-only explanation
+# %% [markdown]
+# #### Get a text-only explanation
 print ('\n'.join(map(str, tab_exp_lreg.as_list(label=numpy.argmax(y_test[idx])))))
 
-# %%
-# Get a graphical explanation of the predicted class
+# %% [markdown]
+# #### Get a graphical explanation of the predicted class
 fig = tab_exp_lreg.as_pyplot_figure(label=numpy.argmax(y_test[idx]))
 
-# %%
-# Get a graphical explanation with class probabilities
+# %% [markdown]
+# #### Get a graphical explanation with class probabilities
 tab_exp_lreg.show_in_notebook()
-
-# %%
-attempt_idx = feature_names.index('attempt')
-tab_explainer.feature_frequencies[attempt_idx]
-tab_explainer.training_data_stats()
-
-
-# %%
-# # %%
-# text_explainer = lime.lime_text.LimeTextExplainer(x_test_w2v.values,
-#     class_names=class_names)
-# # %%
-# exp2 = text_explainer.explain_instance(x_test_w2v.values[idx], dtree.predict,
-#     num_features=20, top_labels=4)
-# # %%
-# exp2.show_in_notebook()
-
 
 # %% [markdown]
 # ## References - Code sample sources disclaimer:
@@ -776,3 +748,4 @@ tab_explainer.training_data_stats()
 #   https://towardsdatascience.com/how-to-tune-a-decision-tree-f03721801680
 # - Lime tutorial
 #   https://marcotcr.github.io/lime/tutorials/Lime%20-%20multiclass.html
+# %%
