@@ -21,7 +21,6 @@ import sqlite3
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 import string
-import re
 
 
 # %% [markdown]
