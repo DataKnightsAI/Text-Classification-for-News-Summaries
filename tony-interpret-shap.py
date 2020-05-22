@@ -1,27 +1,15 @@
 # %% [markdown]
-# # SHAP to interpret our dataset on n-grams embedding
+# # SHAP to interpret our dataset on TF/IDF N-grams embedding
 
 # %% [markdown]
 # ## Import packages and declare constants
 import pandas as pd
 from matplotlib import pyplot as plt
 from sklearn.feature_extraction.text import TfidfVectorizer
-#from sklearn.feature_extraction.text import CountVectorizer
 import numpy as np
-#from sklearn.feature_selection import chi2
-#from PIL import Image
 from collections import Counter
-#import re
 import sqlite3
-#from sklearn import decomposition, ensemble
-#import nltk
-#from keras.preprocessing import text
-#from keras.utils import np_utils
-#from keras.preprocessing import sequence
-#import pydot
 import seaborn as sns
-#from sklearn.metrics import precision_recall_curve
-#from sklearn.metrics import average_precision_score
 from sklearn import svm
 from sklearn import tree
 from sklearn.linear_model import LogisticRegression
@@ -76,16 +64,14 @@ test_data_df.shape
 
 # %% [markdown]
 # ### Sample down
-train_data_sample = train_data_df.sample(n = 300, replace = False,
+train_data_sample = train_data_df.sample(n = 10000, replace = False,
                                          random_state = RANDOM_STATE)
-test_data_sample = test_data_df.sample(n = 300, replace = False,
+test_data_sample = test_data_df.sample(n = 10000, replace = False,
                                        random_state = RANDOM_STATE)
 
 # ### Train & Test data where x is the predictor features, y is the predicted feature
 x_train = train_data_sample.content_cleaned
-# y_train = label_binarize(train_data_sample.category, classes=range(1, N_CLASSES+1))
 x_test = test_data_df.content_cleaned
-# y_test = label_binarize(test_data_df.category, classes=range(1, N_CLASSES+1))
 y_train = train_data_sample.category
 y_test = test_data_df.category
 
@@ -108,19 +94,17 @@ x_test_tfidf = np.round(x_test_tfidf, 2)
 x_train_tfidf_ngram = pd.DataFrame(x_train_tfidf.toarray(), columns = vocab)
 x_test_tfidf_ngram = pd.DataFrame(x_test_tfidf.toarray(), columns = vocab)
 
-
 # %% [markdown]
-# ## Build the model by running the data through an algo
+# ## Build the models by running the data through an algo
 
 # ### SVM Algo Building Function
 def run_svm(x, y):
-    # classifier = svm.SVC(random_state=RANDOM_STATE, decision_function_shape='ovr')
     classifier = OneVsRestClassifier(svm.LinearSVC(random_state=RANDOM_STATE))
     classifier.fit(x, y)
     return classifier
 
 # %% [markdown]
-# ### Run the data through the algo
+# #### Train SVM
 svm_model = run_svm(x_train_tfidf_ngram, y_train)
 
 # %% [markdown]
@@ -130,152 +114,70 @@ def run_dectree(x_train, y_train):
     classifier.fit(x_train, y_train)
     return classifier 
 
-# %%
-# Run Decision Trees Classifier
+# %% [markdown]
+# #### Train Decision Trees Classifier
 dectree_model = run_dectree(x_train_tfidf_ngram, y_train)
 
+# %% [markdown]
+# ### Logistic Regression Function
 def run_logreg(x_train, y_train):
     classifier = OneVsRestClassifier(LogisticRegression(random_state=RANDOM_STATE))
     classifier.fit(x_train, y_train)
     return classifier
 
+# %% [markdown]
+# #### Train Logistic Regression
 logreg_model = run_logreg(x_train_tfidf_ngram, y_train)
 
-# %% 
+# %% [markdown]
+# ## Get an idea of the results
+
 # ### Confusion Matrix
-y_test_pred = svm_model.predict(x_test_tfidf_ngram)
+y_test_pred = logreg_model.predict(x_test_tfidf_ngram)
 cm = confusion_matrix(y_test, y_test_pred)
 cm_df = pd.DataFrame(cm, index = CLASSES, columns = CLASSES)
 cm_df.index.name = 'Actual'
 cm_df.columns.name = 'Predicted'
-plt.title('Confusion Matrix for ' + "SVC", fontsize=14)
+plt.title('Confusion Matrix for ' + "LogReg", fontsize=14)
 sns.heatmap(cm_df, annot=True, fmt='.6g', annot_kws={"size": 10}, cmap='Reds')
 plt.show()
 
-# %%
+# %% [markdown]
+# ## Interpret using SHAP
+
+# ### Initialize/Learn with a subset of data
 attrib_data = shap.sample(x_train_tfidf_ngram, 20)
 explainer = shap.KernelExplainer(logreg_model.predict_proba, attrib_data)
 shap_vals = explainer.shap_values(x_test_tfidf_ngram)
-# %%
-shap.summary_plot(shap_vals, feature_names=vocab, class_names=CLASSES)
-# %%
-shap.decision_plot(explainer.expected_value[0], shap_vals[0][1], feature_names=vocab,
-    feature_display_range=slice(None, -31, -1))
 
 # %% [markdown]
-## Use SHAP to interpret our results!
-#attrib_data = x_train_tfidf_ngram[:200]
-attrib_data = shap.sample(x_train_tfidf_ngram, nsamples=10)
-explainer = shap.KernelExplainer(svm_model.decision_function, attrib_data)
+# ### Plot the different outputs
+
+# #### Summary first
+shap.summary_plot(shap_vals, feature_names=vocab, class_names=CLASSES)
+
+# %% [markdown]
+# #### Decision plots for different predictions
+shap.decision_plot(explainer.expected_value[0], shap_vals[0][40], features=x_test_tfidf_ngram.iloc[40],
+    feature_display_range=slice(None, -17, -1))
+
+shap.decision_plot(explainer.expected_value[0], shap_vals[0][39], features=x_test_tfidf_ngram.iloc[39],
+    feature_display_range=slice(None, -17, -1))
+
+shap.decision_plot(explainer.expected_value[0], shap_vals[0][38], features=x_test_tfidf_ngram.iloc[38],
+    feature_display_range=slice(None, -17, -1))
+
+shap.decision_plot(explainer.expected_value[0], shap_vals[0][23], features=x_test_tfidf_ngram.iloc[23],
+    feature_display_range=slice(None, -17, -1))
 
 # %%
-num_explanations = 5
-shap_vals = explainer.shap_values(x_test_tfidf_ngram)
-
-# %%
-shap.decision_plot(explainer.expected_value[0], shap_vals[0][100], feature_names=vocab,
-    feature_display_range=slice(None, -31, -1))
+shap.multioutput_decision_plot(explainer.expected_value, shap_vals,
+    feature_names=vocab, row_index=40,
+    highlight=y_test_pred[40])
 
 # %%
 shap.force_plot(explainer.expected_value[0], shap_vals[0][0,:],
     x_test_tfidf_ngram.iloc[0,:], link="logit", matplotlib=True)
-    
-# %%
-shap.summary_plot(shap_vals, feature_names=vocab, class_names=CLASSES)
-
-# %%
-shap.summary_plot(shap_vals, feature_names=vocab, plot_type="bar")
-
-# %%
-shap.force_plot(explainer.expected_value[2], shap_vals[2][0,:],
-    x_test_tfidf_ngram.iloc[0,:])
-
-# %% THIS WORKS!!!!
-shap.decision_plot(explainer.expected_value[0], shap_vals[0][100], feature_names=vocab,
-    feature_display_range=slice(None, -31, -1))
-
-# %%
-shap.multioutput_decision_plot(explainer.expected_value, shap_vals, row_index=0)
-
-# %%
-import warnings
-explainer = shap.TreeExplainer(dectree_model, model_output='probability', feature_perturbation='interventional')
-expected_value = explainer.expected_value
-if isinstance(expected_value, list):
-    expected_value = expected_value[0]
-print(f"Explainer expected value: {expected_value}")
-
-select = range(20)
-features = x_test_tfidf_ngram.iloc[select]
-#features_display = X_display.loc[features.index]
-
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    shap_values = explainer.shap_values(features, check_additivity=False)[0]
-    shap_interaction_values = explainer.shap_interaction_values(features)
-if isinstance(shap_interaction_values, list):
-    shap_interaction_values = shap_interaction_values[1]
-
-# %%
-shap.decision_plot(expected_value, shap_values, vocab)
-
-# %% TRY ON TREE
-explainer2 = shap.TreeExplainer(dectree_model)
-
-# %%
-shap_vals2 = explainer2.shap_values(x_test_tfidf_ngram, check_additivity=False)
-
-# %%
-shap.force_plot(explainer2.expected_value[0], shap_vals2[0][0,:],
-    x_test_tfidf_ngram.iloc[0,:], link="logit", matplotlib=True)
-    
-# %%
-shap.summary_plot(shap_vals2, feature_names=vocab, class_names=CLASSES)
-
-# %%
-shap.summary_plot(shap_vals2, feature_names=vocab, plot_type="bar")
-
-# %%
-row_index = 0
-shap.multioutput_decision_plot(list(explainer2.expected_value), shap_vals2,
-                               row_index=row_index, 
-                               feature_names=vocab, 
-                               highlight=y_test[row_index]-1)
-
-# %%
-shap.decision_plot(explainer2.expected_value[0], shap_vals2[0][1], feature_names=vocab,
-    feature_display_range=slice(None, -31, -1))
-
-# %%
-shap.initjs()  
- 
-shap.force_plot(explainer2.expected_value[0], shap_vals2[0][10], x_test_tfidf_ngram.iloc[10, :])
-
-# # %% [markdown]
-# # ## ALIBI for interpretation
-# import alibi
-# from sklearn.metrics import accuracy_score
-# from alibi.explainers import AnchorText
-# from alibi.explainers import KernelShap
-# # from alibi.datasets import fetch_movie_sentiment
-
-# # %%
-# pred_fcn = svm_model.predict
-# svm_explainer = KernelShap(pred_fcn, link='raw', feature_names=vocab)
-# svm_explainer.fit(x_train_tfidf_ngram, summarise_background=True)
-
-# #%%
-# explainer = KernelShap(predict_fn, link='logit', feature_names=vocab)
-
-# # %%
-# import warnings
-# with warnings.catch_warnings():
-#     warnings.simplefilter("ignore")
-#     explainer.fit(x_test_tfidf_ngram, summarise_background=True)
-
-# # %%
-# explanation = explainer.explain(np.array(x_test_tfidf_ngram.iloc[0, :]).reshape(1,-1))
-
 
 # %% [markdown]
 # # References
