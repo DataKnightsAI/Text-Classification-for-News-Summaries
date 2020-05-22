@@ -66,8 +66,8 @@ test_data_df.shape
 # ### Sample down
 train_data_sample = train_data_df.sample(n = 10000, replace = False,
                                          random_state = RANDOM_STATE)
-test_data_sample = test_data_df.sample(n = 10000, replace = False,
-                                       random_state = RANDOM_STATE)
+#test_data_sample = test_data_df.sample(n = 10000, replace = False,
+#                                       random_state = RANDOM_STATE)
 
 # ### Train & Test data where x is the predictor features, y is the predicted feature
 x_train = train_data_sample.content_cleaned
@@ -193,3 +193,4 @@ shap.force_plot(explainer.expected_value[0], shap_vals[0][0,:],
 #   https://www.nature.com/articles/s42256-019-0138-9
 # - 10 October 2018, Explainable machine-learning predictions for the prevention of hypoxaemia during surgery
 #   https://www.nature.com/articles/s41551-018-0304-0 
+#%%
