@@ -1,0 +1,211 @@
+,algo,cv fold,metric,value
+0,Gaussian Naive Bayes,0,fit_time,2.1964333057403564
+1,Gaussian Naive Bayes,1,fit_time,2.2235288619995117
+2,Gaussian Naive Bayes,2,fit_time,2.1934287548065186
+3,Gaussian Naive Bayes,3,fit_time,2.1995058059692383
+4,Gaussian Naive Bayes,4,fit_time,2.194427728652954
+5,Gaussian Naive Bayes,0,score_time,1.4405574798583984
+6,Gaussian Naive Bayes,1,score_time,1.4335253238677979
+7,Gaussian Naive Bayes,2,score_time,1.4565942287445068
+8,Gaussian Naive Bayes,3,score_time,1.443507194519043
+9,Gaussian Naive Bayes,4,score_time,1.45859694480896
+10,Gaussian Naive Bayes,0,test_precision,0.7572252212551871
+11,Gaussian Naive Bayes,1,test_precision,0.7710638925778368
+12,Gaussian Naive Bayes,2,test_precision,0.7667392990360823
+13,Gaussian Naive Bayes,3,test_precision,0.7706670571867906
+14,Gaussian Naive Bayes,4,test_precision,0.7657079235479681
+15,Gaussian Naive Bayes,0,test_recall,0.8591666666666666
+16,Gaussian Naive Bayes,1,test_recall,0.8709166666666667
+17,Gaussian Naive Bayes,2,test_recall,0.8650416666666667
+18,Gaussian Naive Bayes,3,test_recall,0.8770833333333333
+19,Gaussian Naive Bayes,4,test_recall,0.8596666666666667
+20,Gaussian Naive Bayes,0,test_f1,0.8049813589428276
+21,Gaussian Naive Bayes,1,test_f1,0.8179541363387337
+22,Gaussian Naive Bayes,2,test_f1,0.8129294986001527
+23,Gaussian Naive Bayes,3,test_f1,0.8204388665861168
+24,Gaussian Naive Bayes,4,test_f1,0.8099715379330651
+25,Gaussian Naive Bayes,0,test_roc_auc,0.8836736111111111
+26,Gaussian Naive Bayes,1,test_roc_auc,0.892361111111111
+27,Gaussian Naive Bayes,2,test_roc_auc,0.8886597222222222
+28,Gaussian Naive Bayes,3,test_roc_auc,0.8950416666666666
+29,Gaussian Naive Bayes,4,test_roc_auc,0.8859930555555555
+30,SVM/Linear SVC,0,fit_time,373.8562104701996
+31,SVM/Linear SVC,1,fit_time,383.8097050189972
+32,SVM/Linear SVC,2,fit_time,381.7266719341278
+33,SVM/Linear SVC,3,fit_time,390.9062879085541
+34,SVM/Linear SVC,4,fit_time,388.65420722961426
+35,SVM/Linear SVC,0,score_time,0.2732377052307129
+36,SVM/Linear SVC,1,score_time,0.23994064331054688
+37,SVM/Linear SVC,2,score_time,0.2740194797515869
+38,SVM/Linear SVC,3,score_time,0.2218794822692871
+39,SVM/Linear SVC,4,score_time,0.23255705833435059
+40,SVM/Linear SVC,0,test_precision,0.8758377425044092
+41,SVM/Linear SVC,1,test_precision,0.8954069227708766
+42,SVM/Linear SVC,2,test_precision,0.8921689397272328
+43,SVM/Linear SVC,3,test_precision,0.9051256015186967
+44,SVM/Linear SVC,4,test_precision,0.9001520300482919
+45,SVM/Linear SVC,0,test_recall,0.8276666666666667
+46,SVM/Linear SVC,1,test_recall,0.8439583333333334
+47,SVM/Linear SVC,2,test_recall,0.8449583333333334
+48,SVM/Linear SVC,3,test_recall,0.85425
+49,SVM/Linear SVC,4,test_recall,0.8387916666666667
+50,SVM/Linear SVC,0,test_f1,0.8510711225364183
+51,SVM/Linear SVC,1,test_f1,0.8689217305506103
+52,SVM/Linear SVC,2,test_f1,0.8679221057136743
+53,SVM/Linear SVC,3,test_f1,0.8789522196737476
+54,SVM/Linear SVC,4,test_f1,0.8683892675351567
+55,SVM/Linear SVC,0,test_roc_auc,0.8942777777777777
+56,SVM/Linear SVC,1,test_roc_auc,0.9055486111111112
+57,SVM/Linear SVC,2,test_roc_auc,0.9054583333333334
+58,SVM/Linear SVC,3,test_roc_auc,0.9122013888888888
+59,SVM/Linear SVC,4,test_roc_auc,0.903888888888889
+60,Logistic Regression,0,fit_time,24.205207586288452
+61,Logistic Regression,1,fit_time,23.306798219680786
+62,Logistic Regression,2,fit_time,23.77122735977173
+63,Logistic Regression,3,fit_time,24.297362327575684
+64,Logistic Regression,4,fit_time,23.823256492614746
+65,Logistic Regression,0,score_time,0.23157978057861328
+66,Logistic Regression,1,score_time,0.31772708892822266
+67,Logistic Regression,2,score_time,0.28824353218078613
+68,Logistic Regression,3,score_time,0.22651195526123047
+69,Logistic Regression,4,score_time,0.27425074577331543
+70,Logistic Regression,0,test_precision,0.8728683529875937
+71,Logistic Regression,1,test_precision,0.8923232500879352
+72,Logistic Regression,2,test_precision,0.8907577748576434
+73,Logistic Regression,3,test_precision,0.902432598577325
+74,Logistic Regression,4,test_precision,0.8951073721496569
+75,Logistic Regression,0,test_recall,0.829625
+76,Logistic Regression,1,test_recall,0.845625
+77,Logistic Regression,2,test_recall,0.8473333333333334
+78,Logistic Regression,3,test_recall,0.8563333333333333
+79,Logistic Regression,4,test_recall,0.8423333333333334
+80,Logistic Regression,0,test_f1,0.8506974856337185
+81,Logistic Regression,1,test_f1,0.8683467396885162
+82,Logistic Regression,2,test_f1,0.8685030963057868
+83,Logistic Regression,3,test_f1,0.8787788087398982
+84,Logistic Regression,4,test_f1,0.8679188580015027
+85,Logistic Regression,0,test_roc_auc,0.8946736111111112
+86,Logistic Regression,1,test_roc_auc,0.9058055555555556
+87,Logistic Regression,2,test_roc_auc,0.9063472222222222
+88,Logistic Regression,3,test_roc_auc,0.9127361111111111
+89,Logistic Regression,4,test_roc_auc,0.9047152777777779
+90,Decision Tree,0,fit_time,515.2984609603882
+91,Decision Tree,1,fit_time,492.42589139938354
+92,Decision Tree,2,fit_time,475.4552240371704
+93,Decision Tree,3,fit_time,482.7392621040344
+94,Decision Tree,4,fit_time,500.5591444969177
+95,Decision Tree,0,score_time,0.11633038520812988
+96,Decision Tree,1,score_time,0.12260293960571289
+97,Decision Tree,2,score_time,0.1280684471130371
+98,Decision Tree,3,score_time,0.13204741477966309
+99,Decision Tree,4,score_time,0.12320780754089355
+100,Decision Tree,0,test_precision,0.7204439107209408
+101,Decision Tree,1,test_precision,0.7291075759444239
+102,Decision Tree,2,test_precision,0.725312423425631
+103,Decision Tree,3,test_precision,0.7309763617677286
+104,Decision Tree,4,test_precision,0.7180717948717948
+105,Decision Tree,0,test_recall,0.7249166666666667
+106,Decision Tree,1,test_recall,0.7390416666666667
+107,Decision Tree,2,test_recall,0.74
+108,Decision Tree,3,test_recall,0.740875
+109,Decision Tree,4,test_recall,0.7292916666666667
+110,Decision Tree,0,test_f1,0.7226733680865646
+111,Decision Tree,1,test_f1,0.7340410122705733
+112,Decision Tree,2,test_f1,0.7325826011632224
+113,Decision Tree,3,test_f1,0.7358923952405586
+114,Decision Tree,4,test_f1,0.7236382428940569
+115,Decision Tree,0,test_roc_auc,0.815576388888889
+116,Decision Tree,1,test_roc_auc,0.8237569444444445
+117,Decision Tree,2,test_roc_auc,0.8232916666666665
+118,Decision Tree,3,test_roc_auc,0.8249930555555555
+119,Decision Tree,4,test_roc_auc,0.8169236111111111
+0,Stacking,0,fit_time,15.978150129318237
+1,Stacking,1,fit_time,13.521015405654907
+2,Stacking,2,fit_time,14.955230951309204
+3,Stacking,3,fit_time,15.738349199295044
+4,Stacking,4,fit_time,14.079457759857178
+5,Stacking,0,score_time,0.03326869010925293
+6,Stacking,1,score_time,0.04359269142150879
+7,Stacking,2,score_time,0.03403067588806152
+8,Stacking,3,score_time,0.03705000877380371
+9,Stacking,4,score_time,0.03969931602478027
+10,Stacking,0,test_precision,0.8448844884488449
+11,Stacking,1,test_precision,0.8149405772495756
+12,Stacking,2,test_precision,0.8127090301003345
+13,Stacking,3,test_precision,0.8284313725490197
+14,Stacking,4,test_precision,0.7681388012618297
+15,Stacking,0,test_recall,0.8533333333333334
+16,Stacking,1,test_recall,0.8
+17,Stacking,2,test_recall,0.81
+18,Stacking,3,test_recall,0.845
+19,Stacking,4,test_recall,0.8116666666666666
+20,Stacking,0,test_f1,0.8490878938640132
+21,Stacking,1,test_f1,0.8074011774600506
+22,Stacking,2,test_f1,0.8113522537562604
+23,Stacking,3,test_f1,0.8366336633663367
+24,Stacking,4,test_f1,0.7893030794165316
+25,Stacking,0,test_roc_auc,0.9005555555555557
+26,Stacking,1,test_roc_auc,0.8697222222222223
+27,Stacking,2,test_roc_auc,0.8738888888888889
+28,Stacking,3,test_roc_auc,0.8933333333333333
+29,Stacking,4,test_roc_auc,0.8649999999999999
+0,Bagging,0,fit_time,7.736370801925659
+1,Bagging,1,fit_time,6.6147706508636475
+2,Bagging,2,fit_time,7.947237014770508
+3,Bagging,3,fit_time,7.898628234863281
+4,Bagging,4,fit_time,7.793030023574829
+5,Bagging,0,score_time,0.0696873664855957
+6,Bagging,1,score_time,0.08724069595336914
+7,Bagging,2,score_time,0.052184104919433594
+8,Bagging,3,score_time,0.04962468147277832
+9,Bagging,4,score_time,0.06619048118591309
+10,Bagging,0,test_precision,0.8473413379073756
+11,Bagging,1,test_precision,0.8111888111888111
+12,Bagging,2,test_precision,0.8370118845500849
+13,Bagging,3,test_precision,0.8365217391304348
+14,Bagging,4,test_precision,0.8082191780821918
+15,Bagging,0,test_recall,0.8233333333333334
+16,Bagging,1,test_recall,0.7733333333333333
+17,Bagging,2,test_recall,0.8216666666666667
+18,Bagging,3,test_recall,0.8016666666666666
+19,Bagging,4,test_recall,0.7866666666666666
+20,Bagging,0,test_f1,0.8351648351648352
+21,Bagging,1,test_f1,0.7918088737201364
+22,Bagging,2,test_f1,0.8292682926829269
+23,Bagging,3,test_f1,0.8187234042553191
+24,Bagging,4,test_f1,0.7972972972972971
+25,Bagging,0,test_roc_auc,0.8869444444444444
+26,Bagging,1,test_roc_auc,0.8566666666666667
+27,Bagging,2,test_roc_auc,0.8841666666666667
+28,Bagging,3,test_roc_auc,0.8747222222222223
+29,Bagging,4,test_roc_auc,0.8622222222222222
+0,AdaBoost,0,fit_time,17.320380687713623
+1,AdaBoost,1,fit_time,17.439706563949585
+2,AdaBoost,2,fit_time,17.461760759353638
+3,AdaBoost,3,fit_time,17.493533849716187
+4,AdaBoost,4,fit_time,17.432339906692505
+5,AdaBoost,0,score_time,0.08641338348388672
+6,AdaBoost,1,score_time,0.08188295364379883
+7,AdaBoost,2,score_time,0.08039474487304688
+8,AdaBoost,3,score_time,0.0822303295135498
+9,AdaBoost,4,score_time,0.07923650741577148
+10,AdaBoost,0,test_precision,0.8186528497409327
+11,AdaBoost,1,test_precision,0.8050541516245487
+12,AdaBoost,2,test_precision,0.8055077452667814
+13,AdaBoost,3,test_precision,0.818018018018018
+14,AdaBoost,4,test_precision,0.79073756432247
+15,AdaBoost,0,test_recall,0.79
+16,AdaBoost,1,test_recall,0.7433333333333333
+17,AdaBoost,2,test_recall,0.78
+18,AdaBoost,3,test_recall,0.7566666666666667
+19,AdaBoost,4,test_recall,0.7683333333333333
+20,AdaBoost,0,test_f1,0.8040712468193384
+21,AdaBoost,1,test_f1,0.7729636048526862
+22,AdaBoost,2,test_f1,0.7925486875529212
+23,AdaBoost,3,test_f1,0.7861471861471861
+24,AdaBoost,4,test_f1,0.779374471682164
+25,AdaBoost,0,test_roc_auc,0.8658333333333333
+26,AdaBoost,1,test_roc_auc,0.8416666666666666
+27,AdaBoost,2,test_roc_auc,0.8586111111111111
+28,AdaBoost,3,test_roc_auc,0.8502777777777778
+29,AdaBoost,4,test_roc_auc,0.8502777777777778

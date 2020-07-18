@@ -1,0 +1,6 @@
+Questions during office hours
+
+18th Apr 2020
+1. How to find the optimal "feature size" in Word2Vec model? 
+2. Feature selection specific to our project?? Abstract
+3. Lack of clusters in word embedding visualization? Does it indicate a problem?

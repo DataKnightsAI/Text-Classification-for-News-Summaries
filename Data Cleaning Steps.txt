@@ -1,0 +1,3 @@
+1. Clean HTML code (&gt &lt)
+2. Remove all sources (within brackets, eg, AP, Reuters)
+3. (Within CV vectorizer) Take only alphabets, discard numbers, lower case & strips accents and remove stop words

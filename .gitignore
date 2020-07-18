@@ -127,3 +127,23 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+.vscode/settings.json
+feature-engineering extreme.py
+data/custom-trained-word2vec-120000-min2dim300.kv
+data/custom-trained-word2vec-120000-min2dim300.kv.vectors.npy
+data/custom-trained-word2vec-120000-min2dim300.model
+data/custom-trained-word2vec-120000-min2dim300.model.trainables.syn1neg.npy
+data/custom-trained-word2vec-120000-min2dim300.model.wv.vectors.npy
+data/custom-trained-word2vec-120000-min5dim300.kv
+data/custom-trained-word2vec-120000-min5dim300.model
+data/custom-trained-word2vec.kv
+data/custom-trained-word2vec.kv.vectors.npy
+data/custom-trained-word2vec.model
+data/custom-trained-word2vec.model.trainables.syn1neg.npy
+data/custom-trained-word2vec.model.wv.vectors.npy
+data/word2vec-test-features-120000-min2dim300.npz
+data/word2vec-test-features-120000-min5dim300.npz
+data/word2vec-test-features.npz
+data/word2vec-train-features-120000-min2dim300.npz
+data/word2vec-train-features-120000-min5dim300.npz
+data/word2vec-train-features.npz
